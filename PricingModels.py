@@ -1,3 +1,4 @@
+import math
 
 
 # Expected value for a call (simple approach)
@@ -44,54 +45,37 @@ def get_theoretical_value_of_contract(expected_value, interest_rate, num_months)
     return round(theoretical_value, 2)
 
 
-# Test call expected value
-print('Call & Put example 1: ')
-underlying_prices_list = [80, 90, 100, 110, 120]
-probs_associated_list = [0.2, 0.2, 0.2, 0.2, 0.2]
+# Volatility functions
 
-exp_val_call = call_option_expected_value(underlying_prices_list, probs_associated_list, 100)
-assert(exp_val_call == 6)
-print(f'Expected value of a call contract: {exp_val_call}')
+# Desc: Print the standard deviation for a stock
+# Input: One year forward price, Annual volatility expresses as a % (20% = 20)
+# Output: N/A
+def get_standard_deviation_of_volatility(one_year_forward_price, annual_volatility):
+    one_std_dev = one_year_forward_price * (annual_volatility / 100)
+    one_std_upper_range = one_year_forward_price + one_std_dev
+    one_std_lower_range = one_year_forward_price - one_std_dev
 
-exp_val_put = put_option_expected_value(underlying_prices_list, probs_associated_list, 100)
-assert(exp_val_put == 6)
-print(f'Expected value of a put contract: {exp_val_put}')
+    two_std_dev = one_year_forward_price * (2 * (annual_volatility / 100))
+    two_std_upper_range = one_year_forward_price + two_std_dev
+    two_std_lower_range = one_year_forward_price - two_std_dev
 
+    three_std_dev = one_year_forward_price * (2 * (annual_volatility / 100))
+    three_std_upper_range = one_year_forward_price + three_std_dev
+    three_std_lower_range = one_year_forward_price - three_std_dev
 
-# Test theoretical value func
-# Assuming 12% interest rate
-int_rate, num_mo = 0.12, 2
-theo_value = get_theoretical_value_of_contract(exp_val_call, int_rate, num_mo)
-assert(theo_value == 5.88)
-print(f'Theoretical value of a call contract: {theo_value}\n')
+    print(f'The stock has a 68% prob of being inbetween {one_std_lower_range} - {one_std_upper_range}')
+    print(f'The stock has a 95% prob of being inbetween {two_std_lower_range} - {two_std_upper_range}')
+    print(f'The stock has a 99.7% prob of being inbetween {three_std_lower_range} - {three_std_upper_range}')
 
-
-# Test using more realistic probability distributions
-print('Call example | more realistic probs: ')
-underlying_prices_list_2 = [80, 90, 100, 110, 120]
-probs_associated_list_2 = [0.1, 0.2, 0.4, 0.2, 0.1]
-
-exp_val_call_2 = call_option_expected_value(underlying_prices_list_2, probs_associated_list_2, 100)
-assert(exp_val_call_2 == 4)
-print(f'Expected value of a call contract: {exp_val_call_2}')
-
-# & theo value
-theo_value_2 = get_theoretical_value_of_contract(exp_val_call_2, int_rate, num_mo)
-assert(theo_value_2 == 3.92)
-print(f'Theoretical value of a call contract: {theo_value_2}\n')
+    return
 
 
-# New example
-print('Example assuming forward price is $102')
-# Assume current stock is $100, the 2mo forward price = $100 * [1 * (0.12 * (2/12))] = $102
-# If $102 is the expected value of the stock, instead of assigning the prob around $100 lets try $102
-underlying_prices_example = [82, 92, 102, 112, 122]
-probs_associated_example = [0.1, 0.2, 0.4, 0.2, 0.1]
-exp_val_call_3 = call_option_expected_value(underlying_prices_example, probs_associated_example, 100)
-assert(exp_val_call_3 == 5.40)
-print(f'Expected value of a call contract: {exp_val_call_2}')
+# Desc: Return the scaled volatility for a stock | Assumes 256 trading days in a year
+# Input: Annual volatility expresses as a % (20% = 20), Generic time frame [(month, week, day) '1m', '1w', '1d']
+# Output: Scaled volatility of time frame rounded to 2 decimal places
+def get_scaled_volatility(annual_volatility, generic_time_frame):
+    generic_time_frame_denominator = {"1m": 12, "1w": 52, "1d": 256}
 
-# & theo value | assume same int rate & number of months
-theo_value_3 = get_theoretical_value_of_contract(exp_val_call_3, int_rate, num_mo)
-assert(theo_value_3 == 5.29)
-print(f'Theoretical value of a call contract: {theo_value_3}\n')
+    scaled_vol = annual_volatility * (1 / math.sqrt(generic_time_frame_denominator[generic_time_frame]))
+
+    return round(scaled_vol, 2)
