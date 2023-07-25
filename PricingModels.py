@@ -1,4 +1,6 @@
 import math
+import numpy as np
+from scipy.stats import norm
 
 
 # Expected value for a call (simple approach)
@@ -79,3 +81,27 @@ def get_scaled_volatility(annual_volatility, generic_time_frame):
     scaled_vol = annual_volatility * (1 / math.sqrt(generic_time_frame_denominator[generic_time_frame]))
 
     return round(scaled_vol, 2)
+
+
+# Desc: Get the black-scholes theoretical value for an option
+# Input:
+#         S (float): Current stock price
+#         K (float): Option strike price
+#         T (float): Time to expiration (in years)
+#         r (float): Risk-free interest rate (annualized)
+#         sigma (float): Volatility of the underlying asset (annualized)
+#         option_type (str): 'call' for a call option, 'put' for a put option
+# Output: The theoretical option price based on black-scholes model
+
+def black_scholes_model_call_option_price(S, K, T, r, sigma, option_type):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+
+    if option_type == 'call':
+        option_price = S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+    elif option_type == 'put':
+        option_price = K * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+    else:
+        raise ValueError("Invalid option type. Use 'call' or 'put'.")
+
+    return round(option_price, 2)

@@ -1,6 +1,7 @@
 from Commodities_Future_Pricing_Lib import getConvenienceYield_XMoContract, stockForwardPrice, generateDivPayments, \
     simpleStockForwardPrice, generateCouponMonthPayments, bondForwardPrice
-from PricingModels import call_option_expected_value, get_theoretical_value_of_contract, put_option_expected_value, get_scaled_volatility
+from PricingModels import call_option_expected_value, get_theoretical_value_of_contract, put_option_expected_value, \
+    get_scaled_volatility, black_scholes_model_call_option_price
 
 
 # To test the library and assert the correct values
@@ -123,7 +124,25 @@ def test_pricing_models():
     gen_time_week = '1w'
     scaled_vol_week = get_scaled_volatility(annual_volatility, gen_time_week)
     assert(scaled_vol_week == 2.77)
-    print(f'Scaled vol at {annual_volatility} given {gen_time_week} is {scaled_vol_week}%')
+    print(f'Scaled vol at {annual_volatility} given {gen_time_week} is {scaled_vol_week}% \n')
+
+    # Test black-scholes model
+
+    S = 100  # Current stock price
+    K = 105  # Strike price
+    T = 0.5  # Time to expiration in years
+    r = 0.05  # Risk-free interest rate (5%)
+    sigma = 0.2  # Volatility (20%)
+    option_type_call = 'call'
+    option_type_put = 'put'
+
+    option_price_bsm_call = black_scholes_model_call_option_price(S, K, T, r, sigma, option_type_call)
+    option_price_bsm_put = black_scholes_model_call_option_price(S, K, T, r, sigma, option_type_put)
+    assert(option_price_bsm_call == 4.58)
+    assert(option_price_bsm_put == 6.99)
+    print(f"Theoretical option price for call: {option_price_bsm_call:.2f}")
+    print(f"Theoretical option price for call: {option_price_bsm_put:.2f} \n")
+
 
 
 def run_test():
