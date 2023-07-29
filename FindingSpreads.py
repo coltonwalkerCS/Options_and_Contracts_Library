@@ -1,5 +1,6 @@
 import pandas as pd
 from PricingModels import black_scholes_model_option_price
+from OptionsClass import option_data
 
 
 call_options_exp_may_15_data = {
@@ -33,6 +34,7 @@ call_options_exp_july_15_data = {
     'Vega': [0.064, 0.091, 0.106, 0.103, 0.085, 0.062],
     'Implied Volatility': [20.12, 20.21, 20.42, 20.80, 21.14, 21.64]
 }
+
 put_options_exp_july_15_data = {
     'Exercise Price': [44, 46, 48, 50, 52, 54],
     'Price': [0.56, 0.92, 1.98, 3.14, 4.58, 6.21],
@@ -44,29 +46,12 @@ put_options_exp_july_15_data = {
     'Implied Volatility': [20.12, 20.31, 20.42, 20.71, 21.25, 21.78]
 }
 
+# Put options data into df
 call_may_df = pd.DataFrame(call_options_exp_may_15_data)
 put_may_df = pd.DataFrame(put_options_exp_may_15_data)
 
 call_july_df = pd.DataFrame(call_options_exp_july_15_data)
 put_july_df = pd.DataFrame(put_options_exp_july_15_data)
 
-# Use the black-scholes model to get the theoretical price of an option
-call_option = call_may_df.iloc[0]
-
-current_stock_price = 48.40
-my_volatility = 18
-op_strike = call_option['Exercise Price']
-# 56 days to exp
-# 56 / 365 (total num trading days) = 0.21875 annualized num
-time_to_exp = 0.15
-interest_rate = 0.0
-op_type = 'call'
-
-theoretical_price = black_scholes_model_option_price(current_stock_price, call_option['Exercise Price'], time_to_exp,
-                                                     interest_rate, my_volatility, op_type)
-print(f'Theo price : {theoretical_price}')
-
-
-test_theoretical_price = black_scholes_model_option_price(448, 450, 0.29, 0.055, 16, 'put')
-
-print(f'My theo price : {test_theoretical_price}')
+call_may_options = option_data(call_may_df, 'May 15', 'call', 48.40,0.1534, 0.0, 18)
+call_may_options.print_options()

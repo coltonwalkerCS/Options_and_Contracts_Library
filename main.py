@@ -1,9 +1,11 @@
+import pandas as pd
+
 from Commodities_Future_Pricing_Lib import getConvenienceYield_XMoContract, stockForwardPrice, generateDivPayments, \
     simpleStockForwardPrice, generateCouponMonthPayments, bondForwardPrice
 from PricingModels import call_option_expected_value, get_theoretical_value_of_contract, put_option_expected_value, \
     get_scaled_volatility, black_scholes_model_option_price, calc_theta_for_atm_option
-from dynamic_hedging import delta_neutrality_stock
-from option_class import greeks, option
+from DynamicHedging import delta_neutrality_stock
+from OptionsClass import greeks, option
 # To test the library and assert the correct values
 
 
@@ -63,7 +65,7 @@ def test_commodities_futures():
     print(f"Forward bond price: {simpleBondForwardBondPrice} \n")
 
 
-def test_pricing_models():
+def test_PricingModels():
     # Test call expected value
     print('Call & Put example 1: ')
     underlying_prices_list = [80, 90, 100, 110, 120]
@@ -154,7 +156,39 @@ def test_pricing_models():
     print(f"Theta for atm option given {atm_option_theo_val} and {time_to_exp} days to exp is: {theta_atm_op} \n")
 
 
-def test_dynamic_hedging():
+def test_FindingSpreads():
+    # Test theoretical price of an option given my volatility
+    call_options_exp_may_15_data = {
+        'Exercise Price': [44, 46, 48, 50, 52, 54],
+        'Price': [4.59, 2.99, 1.75, 0.93, 0.47, 0.23],
+        # 'Theoretical value': [10.5, 20.3, 15.7, 8.9, 12.1],
+        'Delta': [0.92, 0.78, 0.56, 0.33, 0.16, 0.06],
+        'Gamma': [0.045, 0.088, 0.116, 0.107, 0.072, 0.037],
+        'Theta': [-0.0046, -0.0091, -0.0121, -0.0111, -0.0075, -0.0038],
+        'Vega': [0.029, 0.057, 0.075, 0.069, 0.047, 0.024],
+        'Implied Volatility': [19.83, 20.25, 20.48, 20.88, 21.63, 22.46]
+    }
+    call_may_df = pd.DataFrame(call_options_exp_may_15_data)
+
+    # Use the black-scholes model to get the theoretical price of an option
+    call_option = call_may_df.iloc[0]
+
+    current_stock_price = 48.40
+    my_volatility = 18
+    op_strike = call_option['Exercise Price']
+    # 56 days to exp
+    # 56 / 365 (total num trading days) = 0.21875 annualized num
+    time_to_exp = 0.15
+    interest_rate = 0.0
+    op_type = 'call'
+
+    theoretical_price_call_op = black_scholes_model_option_price(current_stock_price, op_strike, time_to_exp,
+                                                                 interest_rate, my_volatility, op_type)
+    assert(theoretical_price_call_op == 4.53)
+    print(f'Theo price : {theoretical_price_call_op}')
+
+
+def test_DynamicHedging():
     # Test delta neutrality
     test_greeks = greeks(0.5, 0.1, -0.06, 0.01, 0.01)
     test_option = option(1, 99.50, 5.00, test_greeks)
@@ -165,30 +199,44 @@ def test_dynamic_hedging():
     print(f'Equivalent stock: {equiv_stock}')
 
 
-def run_test():
-    print("----------------------------")
-    print("RUN Commodities Futures Test")
-    print("----------------------------")
-    test_commodities_futures()
-    print("----------------------------")
-    print("END Commodities Futures Test")
-    print("----------------------------")
+def run_test(run_select):
+    # if run_select is not None:
 
-    print("----------------------------")
-    print("RUN Pricing Models Test")
-    print("----------------------------")
-    test_pricing_models()
-    print("----------------------------")
-    print("END Pricing Models Test")
-    print("----------------------------")
+    if run_select[0]:
+        print("----------------------------")
+        print("RUN Commodities Futures Test")
+        print("----------------------------")
+        test_commodities_futures()
+        print("----------------------------")
+        print("END Commodities Futures Test")
+        print("----------------------------")
 
-    print("----------------------------")
-    print("RUN Dynamic Hedging Test")
-    print("----------------------------")
-    test_dynamic_hedging()
-    print("----------------------------")
-    print("END Dynamic Hedging Test")
-    print("----------------------------")
+    if run_select[1]:
+        print("----------------------------")
+        print("RUN Pricing Models Test")
+        print("----------------------------")
+        test_PricingModels()
+        print("----------------------------")
+        print("END Pricing Models Test")
+        print("----------------------------")
+
+    if run_select[2]:
+        print("----------------------------")
+        print("RUN Dynamic Hedging Test")
+        print("----------------------------")
+        test_DynamicHedging()
+        print("----------------------------")
+        print("END Dynamic Hedging Test")
+        print("----------------------------")
+
+    if run_select[3]:
+        print("----------------------------")
+        print("RUN Finding Spreads Test")
+        print("----------------------------")
+        test_FindingSpreads()
+        print("----------------------------")
+        print("END Finding Spreads Test")
+        print("----------------------------")
 
 
-run_test()
+run_test(run_select=[False, False, False, True])
