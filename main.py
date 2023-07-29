@@ -1,9 +1,9 @@
 from Commodities_Future_Pricing_Lib import getConvenienceYield_XMoContract, stockForwardPrice, generateDivPayments, \
     simpleStockForwardPrice, generateCouponMonthPayments, bondForwardPrice
 from PricingModels import call_option_expected_value, get_theoretical_value_of_contract, put_option_expected_value, \
-    get_scaled_volatility, black_scholes_model_call_option_price
-
-
+    get_scaled_volatility, black_scholes_model_option_price, calc_theta_for_atm_option
+from dynamic_hedging import delta_neutrality_stock
+from option_class import greeks, option
 # To test the library and assert the correct values
 
 
@@ -136,13 +136,33 @@ def test_pricing_models():
     option_type_call = 'call'
     option_type_put = 'put'
 
-    option_price_bsm_call = black_scholes_model_call_option_price(S, K, T, r, sigma, option_type_call)
-    option_price_bsm_put = black_scholes_model_call_option_price(S, K, T, r, sigma, option_type_put)
+    option_price_bsm_call = black_scholes_model_option_price(S, K, T, r, sigma, option_type_call)
+    option_price_bsm_put = black_scholes_model_option_price(S, K, T, r, sigma, option_type_put)
     assert(option_price_bsm_call == 4.58)
     assert(option_price_bsm_put == 6.99)
     print(f"Theoretical option price for call: {option_price_bsm_call:.2f}")
     print(f"Theoretical option price for call: {option_price_bsm_put:.2f} \n")
 
+    # Test atm theta calc function
+
+    atm_option_theo_val = 2.50
+    # days
+    time_to_exp = 30
+
+    theta_atm_op = calc_theta_for_atm_option(atm_option_theo_val, time_to_exp)
+    assert(theta_atm_op == 0.042)
+    print(f"Theta for atm option given {atm_option_theo_val} and {time_to_exp} days to exp is: {theta_atm_op} \n")
+
+
+def test_dynamic_hedging():
+    # Test delta neutrality
+    test_greeks = greeks(0.5, 0.1, -0.06, 0.01, 0.01)
+    test_option = option(1, 99.50, 5.00, test_greeks)
+    number_of_contracts = 100
+
+    equiv_stock = delta_neutrality_stock(test_option, number_of_contracts)
+    assert(equiv_stock == -50.0)
+    print(f'Equivalent stock: {equiv_stock}')
 
 
 def run_test():
@@ -160,6 +180,14 @@ def run_test():
     test_pricing_models()
     print("----------------------------")
     print("END Pricing Models Test")
+    print("----------------------------")
+
+    print("----------------------------")
+    print("RUN Dynamic Hedging Test")
+    print("----------------------------")
+    test_dynamic_hedging()
+    print("----------------------------")
+    print("END Dynamic Hedging Test")
     print("----------------------------")
 
 

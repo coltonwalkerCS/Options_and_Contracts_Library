@@ -1,7 +1,3 @@
-from enum import Enum
-
-
-# Desc:
 class greeks:
     def __init__(self, delta, gamma, theta, vega, rho):
         self.delta = delta

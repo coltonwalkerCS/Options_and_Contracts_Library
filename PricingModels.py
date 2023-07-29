@@ -93,7 +93,11 @@ def get_scaled_volatility(annual_volatility, generic_time_frame):
 #         option_type (str): 'call' for a call option, 'put' for a put option
 # Output: The theoretical option price based on black-scholes model
 
-def black_scholes_model_call_option_price(S, K, T, r, sigma, option_type):
+def black_scholes_model_option_price(S, K, T, r, sigma, option_type):
+    # Incase input for vol is not in decimal format
+    if sigma > 1:
+        sigma = sigma / 100
+
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
 
@@ -105,3 +109,12 @@ def black_scholes_model_call_option_price(S, K, T, r, sigma, option_type):
         raise ValueError("Invalid option type. Use 'call' or 'put'.")
 
     return round(option_price, 2)
+
+
+# Desc: Get theta for atm option
+# Input: Theoretical value, time to expiration (days)
+# Output: Theta value
+def calc_theta_for_atm_option(theoretical_value, time_to_exp):
+    # TV - TV * sqrt( (t-1) / t )
+    theta = theoretical_value * (1 - math.sqrt(((time_to_exp-1) / time_to_exp)))
+    return round(theta, 3)
