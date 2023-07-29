@@ -9,4 +9,3 @@ def delta_neutrality_stock(option_position, num_contracts):
     contract_delta = option_delta * num_contracts
     stock_equivalent = -1 * contract_delta
     return stock_equivalent
-

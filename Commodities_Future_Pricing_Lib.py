@@ -7,8 +7,8 @@ import math
 # Find the forward price for a physical commodity
 def physicalCommodityForwardPrice(commodity_price, time_to_maturity, interest_rate, annual_storage_rate,
                                   annual_insurance_cost):
-    forward_price = commodity_price * (1 + interest_rate * time_to_maturity) + (annual_storage_rate * time_to_maturity) \
-                    + (annual_insurance_cost * time_to_maturity)
+    forward_price = (commodity_price * (1 + interest_rate * time_to_maturity) + (annual_storage_rate * time_to_maturity)
+                     + (annual_insurance_cost * time_to_maturity))
     return forward_price
 
 
@@ -49,13 +49,13 @@ def stockForwardPrice(stock_price, time_to_maturity, interest_rate, each_dividen
 
     forwardPrice -= dividend_sum
 
-    return forwardPrice
+    return round(forwardPrice, 3)
 
 
 def simpleStockForwardPrice(stock_price, interest_rate, time_to_maturity, dividend, time_to_next_div):
     numDividends = math.floor((time_to_maturity - time_to_next_div) / 6) + 1
     forwardPrice = stock_price * (1 + (interest_rate / 100) * time_to_maturity / 12) - (numDividends * dividend)
-    return forwardPrice
+    return round(forwardPrice, 3)
 
 
 # ---- BONDS ----
@@ -70,7 +70,7 @@ def bondForwardPrice(bond_price, time_to_maturity, rate_interest, each_coupon_pr
                                                    (time_rem_after_coupon_list[i] / 12)))
 
     forwardPrice = (bond_price * (1 + (rate_interest / 100) * (time_to_maturity / 12)) - sum_interest_coupons)
-    return forwardPrice
+    return round(forwardPrice, 3)
 
 
 def generateCouponMonthPayments(time_to_maturity, next_coupon_payment):

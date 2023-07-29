@@ -23,8 +23,8 @@ class greeks:
 # Desc:
 class option:
 
-    def __init__(self, option_type, strike_price, cost, implied_volatility, curr_greeks, curr_stock_price, annual_time_to_exp,
-                 curr_int_rate, curr_volatility):
+    def __init__(self, option_type, strike_price, cost, implied_volatility, curr_greeks, curr_stock_price,
+                 annual_time_to_exp, curr_int_rate, curr_volatility):
         # 1 for call, -1 for put
         self.option_type = option_type
         self.strike_price = strike_price
