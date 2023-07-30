@@ -1,6 +1,34 @@
 import pandas as pd
 from PricingModels import black_scholes_model_option_price
 from OptionsClass import option_data
+from SpreadsClass import Straddle
+
+
+def getStraddleSpreads(ops_data):
+    call_ops = ops_data.options_calls
+    put_ops = ops_data.options_puts
+
+    # Assert length and values before generating straddles
+    assert(len(call_ops) == len(put_ops))
+    assert(call_ops[0].strike_price == put_ops[0].strike_price)
+
+    straddles = []
+
+    for i in range(0, len(call_ops)):
+        # Get both sides long & short
+        new_call_op_long = call_ops[i].create_option_trade('Bought')
+        new_put_op_long = put_ops[i].create_option_trade('Bought')
+        new_straddle_long = Straddle(call_ops[i].strike_price, new_call_op_long, new_put_op_long,
+                                     ops_data.expiration_date)
+        straddles.append(new_straddle_long)
+
+        new_call_op_short = call_ops[i].create_option_trade('Sold')
+        new_put_op_short = put_ops[i].create_option_trade('Sold')
+        new_straddle_short = Straddle(call_ops[i].strike_price, new_call_op_short, new_put_op_short,
+                                      ops_data.expiration_date)
+        straddles.append(new_straddle_short)
+
+    return straddles
 
 
 call_options_exp_may_15_data = {
@@ -15,7 +43,7 @@ call_options_exp_may_15_data = {
 }
 put_options_exp_may_15_data = {
     'Exercise Price': [44, 46, 48, 50, 52, 54],
-    'Price': [0.2, 0.58, 1.35, 2.53, 4.06, 5.84],
+    'Price': [0.20, 0.58, 1.35, 2.53, 4.06, 5.84],
     # 'Theoretical value': [10.5, 20.3, 15.7, 8.9, 12.1],
     'Delta': [-0.08, -0.22, -0.44, -0.67, -0.84, -0.94],
     'Gamma': [0.045, 0.088, 0.116, 0.107, 0.072, 0.037],
@@ -53,5 +81,10 @@ put_may_df = pd.DataFrame(put_options_exp_may_15_data)
 call_july_df = pd.DataFrame(call_options_exp_july_15_data)
 put_july_df = pd.DataFrame(put_options_exp_july_15_data)
 
-call_may_options = option_data(call_may_df, 'May 15', 'call', 48.40,0.1534, 0.0, 18)
-call_may_options.print_options()
+may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40, 0.1534, 0.0, 18)
+# may_options.print_options()
+
+straddleSpreads = getStraddleSpreads(may_options)
+
+for straddle in straddleSpreads:
+    straddle.print_straddle()
