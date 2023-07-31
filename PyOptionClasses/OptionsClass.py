@@ -57,7 +57,6 @@ class option:
                                    self.greeks.greeks_from_trade(trade), self.curr_stock_price,
                                    self.annual_time_to_expiration, self.current_interest_rate,
                                    self.current_volatility, trade)
-        # .greeks_from_trade(trade)
         return option_with_trade
 
 

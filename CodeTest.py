@@ -6,8 +6,9 @@ from CommoditiesFuturePricing import getConvenienceYield_XMoContract, stockForwa
 from PricingModels import call_option_expected_value, get_theoretical_value_of_contract, put_option_expected_value, \
     get_scaled_volatility, black_scholes_model_option_price, calc_theta_for_atm_option
 from DynamicHedging import delta_neutrality_stock
-from OptionsClass import greeks, option, option_data
+from PyOptionClasses.OptionsClass import greeks, option, option_data
 from FindingSpreads import getStraddleSpreads
+
 
 class CommoditiesFuturesTest(unittest.TestCase):
 
@@ -192,7 +193,7 @@ class DynamicHedgingTest(unittest.TestCase):
         curr_volatility = 13
         test_greeks = greeks(0.5, 0.1, -0.06, 0.01, 0.01)
         test_option = option(op_type, strike_price, cost, implied_volatility, test_greeks, curr_stock_price,
-                             annual_time_to_exp, curr_interest_rate, curr_volatility)
+                             annual_time_to_exp, curr_interest_rate, curr_volatility, 'Bought')
         number_of_contracts = 100
 
         equiv_stock = delta_neutrality_stock(test_option, number_of_contracts)

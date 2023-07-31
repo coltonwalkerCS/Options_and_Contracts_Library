@@ -1,4 +1,4 @@
-from OptionsClass import greeks, option
+from PyOptionClasses.OptionsClass import greeks, option
 
 
 # Desc: Find the number of stock needed to buy (or sell) to become delta neutral

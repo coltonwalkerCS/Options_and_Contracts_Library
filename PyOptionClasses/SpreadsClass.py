@@ -1,10 +1,10 @@
-from OptionsClass import option, option_data, greeks
+from PyOptionClasses.OptionsClass import option, option_data, greeks
 
 
 # Spread
 class Spread:
     def __init__(self, options):
-        # self.risk_profie = risk()
+        # self.risk_profile = risk()
         self.greeks = self.generateSpreadGreeks(options)
         self.cost = round(sum(op.curr_cost for op in options), 2)
 
