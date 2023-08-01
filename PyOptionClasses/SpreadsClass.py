@@ -39,3 +39,47 @@ class Straddle(Spread):
         print(f'Call option, Cost: {self.call_option.curr_cost}, Greeks {self.call_option.greeks.get_greeks()}')
         print(f'Put option, Cost: {self.put_option.curr_cost}, Greeks {self.put_option.greeks.get_greeks()}')
         print(f'Straddle, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
+
+
+class Strangle(Spread):
+    def __init__(self, strangle_range, option_1, option_2, expiration):
+        super().__init__([option_1, option_2])
+        self.strangle_range = strangle_range
+        self.mid_price = abs(option_1.strike_price - option_2.strike_price)
+        self.option_1 = option_1
+        self.option_2 = option_2
+        self.expiration = expiration
+
+    def print_strangle(self):
+        print(f'Mid price: {self.mid_price} and Range: {self.strangle_range} at date {self.expiration}')
+        print(f'Option 1, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
+              f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(f'Option 2, Type: {self.option_2.option_type}, Strike: {self.option_2.strike_price}, '
+              f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
+        print(f'Strangle, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
+
+
+class Butterfly(Spread):
+
+    def __init__(self, butterfly_range, option_1, option_2_1, option_2_2, option_3, expiration):
+        super().__init__([option_1, option_2_1, option_2_2, option_3])
+        self.butterfly_range = butterfly_range
+        self.center_price = option_2_1.strike_price
+        self.option_1 = option_1
+        # Inherently has 2 middle options
+        self.option_2_1 = option_2_1
+        self.option_2_2 = option_2_2
+        self.option_3 = option_3
+        self.expiration = expiration
+
+    def print_butterfly(self):
+        print(f'Center price: {self.center_price} and Range: {self.butterfly_range} at date {self.expiration}')
+        print(f'Option 1, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
+              f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(f'Option 2_1, Type: {self.option_2_1.option_type}, Strike: {self.option_2_1.strike_price}, '
+              f'Cost: {self.option_2_1.curr_cost}, Greeks {self.option_2_1.greeks.get_greeks()}')
+        print(f'Option 2_2, Type: {self.option_2_2.option_type}, Strike: {self.option_2_2.strike_price}, '
+              f'Cost: {self.option_2_2.curr_cost}, Greeks {self.option_2_2.greeks.get_greeks()}')
+        print(f'Option 3, Type: {self.option_3.option_type}, Strike: {self.option_3.strike_price}, '
+              f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
+        print(f'Butterfly, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')

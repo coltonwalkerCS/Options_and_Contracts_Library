@@ -7,7 +7,7 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
     get_scaled_volatility, black_scholes_model_option_price, calc_theta_for_atm_option
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
-from FindingSpreads import getStraddleSpreads
+from FindingSpreads import getStraddleSpreads, getStrangleSpreads, getButterflySpreads
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -269,8 +269,10 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(theoretical_price_call_op, 4.53)
         # print(f'Theo price : {theoretical_price_call_op}')
 
+        # Add test across the different prices
+
     def test_generating_straddles(self):
-        # Put options data into df
+        # Put the options data into df
         call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
         put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
 
@@ -292,3 +294,84 @@ class FindingSpreadsTest(unittest.TestCase):
         straddleTestThree = straddleSpreads[7]
         self.assertEqual(straddleTestThree.cost, -3.46)
         self.assertEqual(straddleTestThree.greeks.get_greeks(), greeks(0.34, -0.21, 0.02, -0.14, 0.01).get_greeks())
+
+    def test_generating_strangles(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        # Test for different ranges 2, 6, 10
+        strangleSpreads_range2 = getStrangleSpreads(may_options, 2)
+        strangleSpreads_range6 = getStrangleSpreads(may_options, 6)
+        strangleSpreads_range10 = getStrangleSpreads(may_options, 10)
+
+        # Test it got the correct number of strangles for the specific range
+        # Includes both call and put strangles, and each long and short type
+        self.assertEqual(len(strangleSpreads_range2), 20)
+        self.assertEqual(len(strangleSpreads_range6), 12)
+        self.assertEqual(len(strangleSpreads_range10), 4)
+
+        # Test specific instances within each strangle
+
+        # Test strangleSpreads_range2[7]
+        self.assertEqual(strangleSpreads_range2[7].option_1.option_type, 'put')
+        self.assertEqual(strangleSpreads_range2[7].option_2.option_type, 'put')
+        self.assertEqual(strangleSpreads_range2[7].option_1.strike_price, 46)
+        self.assertEqual(strangleSpreads_range2[7].option_2.strike_price, 48)
+        self.assertEqual(strangleSpreads_range2[7].cost, -1.93)
+
+        # Test strangleSpreads_range6[9]
+        self.assertEqual(strangleSpreads_range6[9].option_1.option_type, 'put')
+        self.assertEqual(strangleSpreads_range6[9].option_2.option_type, 'put')
+        self.assertEqual(strangleSpreads_range6[9].option_1.strike_price, 48)
+        self.assertEqual(strangleSpreads_range6[9].option_2.strike_price, 54)
+        self.assertEqual(strangleSpreads_range6[9].cost, 7.19)
+
+        # Test strangleSpreads_range10[1]
+        self.assertEqual(strangleSpreads_range10[0].option_1.option_type, 'call')
+        self.assertEqual(strangleSpreads_range10[0].option_2.option_type, 'call')
+        self.assertEqual(strangleSpreads_range10[0].option_1.strike_price, 44)
+        self.assertEqual(strangleSpreads_range10[0].option_2.strike_price, 54)
+        self.assertEqual(strangleSpreads_range10[0].cost, 4.82)
+
+    def test_generating_butterflies(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        butterflySpreads_range2 = getButterflySpreads(may_options, 2)
+        butterflySpreads_range4 = getButterflySpreads(may_options, 4)
+
+        self.assertEqual(len(butterflySpreads_range2), 16)
+        self.assertEqual(len(butterflySpreads_range4), 8)
+
+        # Test specific instances within each strangle
+
+        # Test butterflySpreads_range2[3]
+        self.assertEqual(butterflySpreads_range2[3].option_1.option_type, 'put')
+        self.assertEqual(butterflySpreads_range2[3].option_2_1.option_type, 'put')
+        self.assertEqual(butterflySpreads_range2[3].option_2_2.option_type, 'put')
+        self.assertEqual(butterflySpreads_range2[3].option_3.option_type, 'put')
+        self.assertEqual(butterflySpreads_range2[3].option_1.strike_price, 44)
+        self.assertEqual(butterflySpreads_range2[3].option_2_1.strike_price, 46)
+        self.assertEqual(butterflySpreads_range2[3].option_2_2.strike_price, 46)
+        self.assertEqual(butterflySpreads_range2[3].option_3.strike_price, 48)
+        self.assertEqual(butterflySpreads_range2[3].cost, -0.39)
+
+        # Test butterflySpreads_range4[6]
+
+        self.assertEqual(butterflySpreads_range4[6].option_1.option_type, 'call')
+        self.assertEqual(butterflySpreads_range4[6].option_2_1.option_type, 'call')
+        self.assertEqual(butterflySpreads_range4[6].option_2_2.option_type, 'call')
+        self.assertEqual(butterflySpreads_range4[6].option_3.option_type, 'call')
+        self.assertEqual(butterflySpreads_range4[6].option_1.strike_price, 46)
+        self.assertEqual(butterflySpreads_range4[6].option_2_1.strike_price, 50)
+        self.assertEqual(butterflySpreads_range4[6].option_2_2.strike_price, 50)
+        self.assertEqual(butterflySpreads_range4[6].option_3.strike_price, 54)
+        self.assertEqual(butterflySpreads_range4[6].cost, -1.36)

@@ -68,6 +68,7 @@ class option_data:
         self.annual_time_to_expiration = annual_time_to_exp
         self.current_interest_rate = curr_int_rate
         self.current_volatility = curr_volatility
+        self.data_spread = abs(options_data_calls.loc[0, 'Exercise Price'] - options_data_calls.loc[1, 'Exercise Price'])
 
         # Only generate if there is data to parse
         if options_data_calls is not None:
