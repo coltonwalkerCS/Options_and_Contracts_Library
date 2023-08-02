@@ -7,7 +7,7 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
     get_scaled_volatility, black_scholes_model_option_price, calc_theta_for_atm_option
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
-from FindingSpreads import getStraddleSpreads, getStrangleSpreads, getButterflySpreads
+from FindingSpreads import getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -375,3 +375,53 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(butterflySpreads_range4[6].option_2_2.strike_price, 50)
         self.assertEqual(butterflySpreads_range4[6].option_3.strike_price, 54)
         self.assertEqual(butterflySpreads_range4[6].cost, -1.36)
+
+    def test_generating_condors(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        condorSpreads_range2_2 = getCondorSpreads(may_options, 2, 2)
+        condorSpreads_range2_4 = getCondorSpreads(may_options, 2, 4)
+        condorSpreads_range4_2 = getCondorSpreads(may_options, 4, 2)
+
+        self.assertEqual(len(condorSpreads_range2_2), 12)
+        self.assertEqual(len(condorSpreads_range2_4), 4)
+        self.assertEqual(len(condorSpreads_range4_2), 8)
+
+        # Test condorSpreads_range2_2[4]
+        self.assertEqual(condorSpreads_range2_2[4].option_1.option_type, 'call')
+        self.assertEqual(condorSpreads_range2_2[4].option_2.option_type, 'call')
+        self.assertEqual(condorSpreads_range2_2[4].option_3.option_type, 'call')
+        self.assertEqual(condorSpreads_range2_2[4].option_4.option_type, 'call')
+        self.assertEqual(condorSpreads_range2_2[4].option_1.strike_price, 46)
+        self.assertEqual(condorSpreads_range2_2[4].option_2.strike_price, 48)
+        self.assertEqual(condorSpreads_range2_2[4].option_3.strike_price, 50)
+        self.assertEqual(condorSpreads_range2_2[4].option_4.strike_price, 52)
+        self.assertEqual(condorSpreads_range2_2[4].cost, 0.78)
+
+        # Test condorSpreads_range2_4[1]
+        self.assertEqual(condorSpreads_range2_4[1].option_1.option_type, 'put')
+        self.assertEqual(condorSpreads_range2_4[1].option_2.option_type, 'put')
+        self.assertEqual(condorSpreads_range2_4[1].option_3.option_type, 'put')
+        self.assertEqual(condorSpreads_range2_4[1].option_4.option_type, 'put')
+        self.assertEqual(condorSpreads_range2_4[1].option_1.strike_price, 44)
+        self.assertEqual(condorSpreads_range2_4[1].option_2.strike_price, 48)
+        self.assertEqual(condorSpreads_range2_4[1].option_3.strike_price, 50)
+        self.assertEqual(condorSpreads_range2_4[1].option_4.strike_price, 54)
+        self.assertEqual(condorSpreads_range2_4[1].cost, 2.16)
+
+
+        # Test condorSpreads_range4_2[1]
+        self.assertEqual(condorSpreads_range4_2[5].option_1.option_type, 'put')
+        self.assertEqual(condorSpreads_range4_2[5].option_2.option_type, 'put')
+        self.assertEqual(condorSpreads_range4_2[5].option_3.option_type, 'put')
+        self.assertEqual(condorSpreads_range4_2[5].option_4.option_type, 'put')
+        self.assertEqual(condorSpreads_range4_2[5].option_1.strike_price, 46)
+        self.assertEqual(condorSpreads_range4_2[5].option_2.strike_price, 48)
+        self.assertEqual(condorSpreads_range4_2[5].option_3.strike_price, 52)
+        self.assertEqual(condorSpreads_range4_2[5].option_4.strike_price, 54)
+        self.assertEqual(condorSpreads_range4_2[5].cost, 1.01)
