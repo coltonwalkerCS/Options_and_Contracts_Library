@@ -8,6 +8,7 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
 from FindingSpreads import getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads
+from PyOptionClasses.OptionRiskProfile import OptionRiskProfile
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -425,3 +426,13 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(condorSpreads_range4_2[5].option_3.strike_price, 52)
         self.assertEqual(condorSpreads_range4_2[5].option_4.strike_price, 54)
         self.assertEqual(condorSpreads_range4_2[5].cost, 1.01)
+
+
+class RiskProfileTest(unittest.TestCase):
+    test_option = option(option_type='call', strike_price=105, cost=4, implied_volatility=18,
+                         curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1), curr_stock_price=100,
+                         annual_time_to_exp=0.1643, curr_int_rate=0.05, curr_volatility=19, trade='Bought')
+
+    RiskProfile = OptionRiskProfile(test_option)
+
+    print(RiskProfile.price_range)

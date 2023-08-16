@@ -29,6 +29,7 @@ class Spread:
 class Straddle(Spread):
     def __init__(self, strike_price, call_option, put_option, expiration):
         super().__init__([call_option, put_option])
+        self.name = 'Straddle'
         self.strike_price = strike_price
         self.call_option = call_option
         self.put_option = put_option
@@ -44,6 +45,7 @@ class Straddle(Spread):
 class Strangle(Spread):
     def __init__(self, strangle_range, option_1, option_2, expiration):
         super().__init__([option_1, option_2])
+        self.name = 'Strangle'
         self.strangle_range = strangle_range
         self.mid_price = abs(option_1.strike_price - option_2.strike_price)
         self.option_1 = option_1
@@ -63,6 +65,7 @@ class Butterfly(Spread):
 
     def __init__(self, butterfly_range, option_1, option_2_1, option_2_2, option_3, expiration):
         super().__init__([option_1, option_2_1, option_2_2, option_3])
+        self.name = 'Butterfly'
         self.butterfly_range = butterfly_range
         self.center_price = option_2_1.strike_price
         self.option_1 = option_1
@@ -88,6 +91,7 @@ class Butterfly(Spread):
 class Condor(Spread):
     def __init__(self, condor_outer_range, condor_inner_range, option_1, option_2, option_3, option_4, expiration):
         super().__init__([option_1, option_2, option_3, option_4])
+        self.name = 'Condor'
         self.condor_outer_range = condor_outer_range
         self.condor_inner_range = condor_inner_range
         self.center_price = abs(option_3.strike_price - option_2.strike_price)
