@@ -1,5 +1,6 @@
 from PricingModels import black_scholes_model_option_price
-
+import math
+import numpy as np
 
 class greeks:
     def __init__(self, delta, gamma, theta, vega, rho):
@@ -47,6 +48,10 @@ class option:
         # Bought or Sold
         self.trade = trade
 
+        self.price_range = self.get_standard_deviation_price_move_range()
+        self.payoff_profile = self.calculate_payoff_profile(self.price_range)
+        self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
+
     def create_option_trade(self, trade):
         trade_cost = self.curr_cost
         if trade == 'Sold':
@@ -58,6 +63,47 @@ class option:
                                    self.annual_time_to_expiration, self.current_interest_rate,
                                    self.current_volatility, trade)
         return option_with_trade
+
+    def get_standard_deviation_price_move_range(self):
+        standard_deviation = (self.curr_stock_price * (self.current_volatility/100) *
+                              math.sqrt(self.annual_time_to_expiration * 365)) / math.sqrt(365)
+
+        price_range_lower_bound = round(self.curr_stock_price - (3 * standard_deviation), 2)
+        price_range_upper_bound = round(self.curr_stock_price + (3 * standard_deviation), 2)
+        num_points = int(round((price_range_upper_bound - price_range_lower_bound), 2) * 100)
+
+        price_range_list = np.linspace(price_range_lower_bound, price_range_upper_bound, num_points)
+        rounded_price_range_list = np.round(price_range_list, 2)
+        return rounded_price_range_list
+
+    def calculate_payoff_profile(self, price_range):
+        payoff_profile = [0] * len(price_range)
+        print(self.strike_price)
+        for i, price in enumerate(price_range):
+            if self.option_type == 'call':
+                payoff = max(price - self.strike_price, 0)
+            elif self.option_type == 'put':
+                payoff = max(self.strike_price - price, 0)
+            else:
+                raise ValueError("Invalid option type")
+
+            if self.trade == 'Sold':
+                payoff *= -1  # Sold options have inverse payoff
+            payoff_profile[i] += round(payoff, 2)
+
+        return payoff_profile
+
+    def calculate_metrics(self, price_range):
+        payoff_profile = self.calculate_payoff_profile(price_range)
+
+        max_profit = round(max(payoff_profile) - self.curr_cost, 2)
+        max_loss = self.curr_cost
+
+        break_even_point = [price_range[i] for i, payoff in enumerate(payoff_profile) if payoff == self.curr_cost]
+
+        # risk_reward_ratio = -max_loss / max_profit if max_profit != 0 else None
+
+        return max_profit, max_loss, break_even_point # risk_reward_ratio
 
 
 class option_data:

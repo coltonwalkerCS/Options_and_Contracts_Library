@@ -433,6 +433,11 @@ class RiskProfileTest(unittest.TestCase):
                          curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1), curr_stock_price=100,
                          annual_time_to_exp=0.1643, curr_int_rate=0.05, curr_volatility=19, trade='Bought')
 
-    RiskProfile = OptionRiskProfile(test_option)
+    # RiskProfile = OptionRiskProfile(test_option)
 
-    print(RiskProfile.price_range)
+    print(test_option.price_range)
+    print(f' Payoff profile: {test_option.payoff_profile}')
+    print(f' Max profit: {test_option.max_profit}')
+    print(f' Max loss: {test_option.max_loss}')
+    print(f' Break even points: {test_option.break_even_points}')
+    # print(f' Risk reward ratio: {RiskProfile.risk_reward_ratio}')
