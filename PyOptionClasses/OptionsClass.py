@@ -2,6 +2,7 @@ from PricingModels import black_scholes_model_option_price
 import math
 import numpy as np
 
+
 class greeks:
     def __init__(self, delta, gamma, theta, vega, rho):
         self.delta = delta
@@ -23,7 +24,7 @@ class greeks:
     def greeks_from_trade(self, trade):
         new_greek = greeks(self.delta, self.gamma, self.theta, self.vega, self.rho)
         if trade == 'Sold':
-            new_greek.update_greeks(-1*self.delta, -1*self.gamma, -1*self.theta, -1*self.vega, -1*self.rho)
+            new_greek.update_greeks(-1 * self.delta, -1 * self.gamma, -1 * self.theta, -1 * self.vega, -1 * self.rho)
         return new_greek
 
 
@@ -65,7 +66,7 @@ class option:
         return option_with_trade
 
     def get_standard_deviation_price_move_range(self):
-        standard_deviation = (self.curr_stock_price * (self.current_volatility/100) *
+        standard_deviation = (self.curr_stock_price * (self.current_volatility / 100) *
                               math.sqrt(self.annual_time_to_expiration * 365)) / math.sqrt(365)
 
         price_range_lower_bound = round(self.curr_stock_price - (3 * standard_deviation), 2)
@@ -78,7 +79,6 @@ class option:
 
     def calculate_payoff_profile(self, price_range):
         payoff_profile = [0] * len(price_range)
-        print(self.strike_price)
         for i, price in enumerate(price_range):
             if self.option_type == 'call':
                 payoff = max(price - self.strike_price, 0)
@@ -88,7 +88,12 @@ class option:
                 raise ValueError("Invalid option type")
 
             if self.trade == 'Sold':
-                payoff *= -1  # Sold options have inverse payoff
+                payoff *= -1
+                payoff -= self.curr_cost
+                # Sold options have inverse payoff
+            else:
+                payoff -= self.curr_cost
+
             payoff_profile[i] += round(payoff, 2)
 
         return payoff_profile
@@ -96,14 +101,14 @@ class option:
     def calculate_metrics(self, price_range):
         payoff_profile = self.calculate_payoff_profile(price_range)
 
-        max_profit = round(max(payoff_profile) - self.curr_cost, 2)
-        max_loss = self.curr_cost
+        max_profit = round(max(payoff_profile), 2)
+        max_loss = round(min(payoff_profile), 2)
 
-        break_even_point = [price_range[i] for i, payoff in enumerate(payoff_profile) if payoff == self.curr_cost]
+        break_even_point = [price_range[i] for i, payoff in enumerate(payoff_profile) if payoff == 0]
 
         # risk_reward_ratio = -max_loss / max_profit if max_profit != 0 else None
 
-        return max_profit, max_loss, break_even_point # risk_reward_ratio
+        return max_profit, max_loss, break_even_point  # risk_reward_ratio
 
 
 class option_data:
@@ -114,7 +119,8 @@ class option_data:
         self.annual_time_to_expiration = annual_time_to_exp
         self.current_interest_rate = curr_int_rate
         self.current_volatility = curr_volatility
-        self.data_spread = abs(options_data_calls.loc[0, 'Exercise Price'] - options_data_calls.loc[1, 'Exercise Price'])
+        self.data_spread = abs(
+            options_data_calls.loc[0, 'Exercise Price'] - options_data_calls.loc[1, 'Exercise Price'])
 
         # Only generate if there is data to parse
         if options_data_calls is not None:

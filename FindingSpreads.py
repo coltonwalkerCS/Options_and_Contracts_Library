@@ -33,6 +33,11 @@ def getStraddleSpreads(ops_data):
 
 
 def getStrangleSpreads(ops_data, strangle_range):
+
+    # TODO : FIX STRANGLE SPREADS TO BE CORRECT!!!
+    # PUT / CALL not CALL/CALL or PUT/PUT
+    # TODO: FIX ISSUES AND FIX TEST
+
     call_ops = ops_data.options_calls
     put_ops = ops_data.options_puts
 
@@ -60,11 +65,11 @@ def getStrangleSpreads(ops_data, strangle_range):
         # Get long side
         # Get both calls and puts
 
-        # Calls-long
+        # Calls/put-long
         new_call_op_1_long = call_ops[i].create_option_trade('Bought')
-        new_call_op_2_long = call_ops[i + option_data_gap].create_option_trade('Bought')
+        new_put_op_2_long = put_ops[i + option_data_gap].create_option_trade('Bought')
 
-        new_strangle_long_calls = Strangle(strangle_range, new_call_op_1_long, new_call_op_2_long,
+        new_strangle_long_calls = Strangle(strangle_range, new_call_op_1_long, new_put_op_2_long,
                                            ops_data.expiration_date)
 
         strangles.append(new_strangle_long_calls)

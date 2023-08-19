@@ -8,7 +8,6 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
 from FindingSpreads import getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads
-from PyOptionClasses.OptionRiskProfile import OptionRiskProfile
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -284,9 +283,14 @@ class FindingSpreadsTest(unittest.TestCase):
 
         # Test 3 spreads and the values
 
+
+
         straddleTestOne = straddleSpreads[1]
         self.assertEqual(straddleTestOne.cost, -4.79)
         self.assertEqual(straddleTestOne.greeks.get_greeks(), greeks(-0.84, -0.09, 0.01, -0.06, 0.01).get_greeks())
+        print('Print straddle one')
+        print(straddleTestOne.print_straddle())
+
 
         straddleTestTwo = straddleSpreads[4]
         self.assertEqual(straddleTestTwo.cost, 3.1)
@@ -415,7 +419,6 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(condorSpreads_range2_4[1].option_4.strike_price, 54)
         self.assertEqual(condorSpreads_range2_4[1].cost, 2.16)
 
-
         # Test condorSpreads_range4_2[1]
         self.assertEqual(condorSpreads_range4_2[5].option_1.option_type, 'put')
         self.assertEqual(condorSpreads_range4_2[5].option_2.option_type, 'put')
@@ -429,15 +432,143 @@ class FindingSpreadsTest(unittest.TestCase):
 
 
 class RiskProfileTest(unittest.TestCase):
-    test_option = option(option_type='call', strike_price=105, cost=4, implied_volatility=18,
-                         curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1), curr_stock_price=100,
-                         annual_time_to_exp=0.1643, curr_int_rate=0.05, curr_volatility=19, trade='Bought')
 
-    # RiskProfile = OptionRiskProfile(test_option)
+    def setUp(self):
+        self.call_options_exp_may_15_data = {
+            'Exercise Price': [44, 46, 48, 50, 52, 54],
+            'Price': [4.59, 2.99, 1.75, 0.93, 0.47, 0.23],
+            # 'Theoretical value': [10.5, 20.3, 15.7, 8.9, 12.1],
+            'Delta': [0.92, 0.78, 0.56, 0.33, 0.16, 0.06],
+            'Gamma': [0.045, 0.088, 0.116, 0.107, 0.072, 0.037],
+            'Theta': [-0.0046, -0.0091, -0.0121, -0.0111, -0.0075, -0.0038],
+            'Vega': [0.029, 0.057, 0.075, 0.069, 0.047, 0.024],
+            'Implied Volatility': [19.83, 20.25, 20.48, 20.88, 21.63, 22.46]
+        }
+        self.put_options_exp_may_15_data = {
+            'Exercise Price': [44, 46, 48, 50, 52, 54],
+            'Price': [0.20, 0.58, 1.35, 2.53, 4.06, 5.84],
+            # 'Theoretical value': [10.5, 20.3, 15.7, 8.9, 12.1],
+            'Delta': [-0.08, -0.22, -0.44, -0.67, -0.84, -0.94],
+            'Gamma': [0.045, 0.088, 0.116, 0.107, 0.072, 0.037],
+            'Theta': [-0.0046, -0.0091, -0.0121, -0.0111, -0.0075, -0.0038],
+            'Vega': [0.029, 0.057, 0.075, 0.069, 0.047, 0.024],
+            'Implied Volatility': [20.12, 20.09, 20.48, 20.88, 21.45, 22.73]
+        }
 
-    print(test_option.price_range)
-    print(f' Payoff profile: {test_option.payoff_profile}')
-    print(f' Max profit: {test_option.max_profit}')
-    print(f' Max loss: {test_option.max_loss}')
-    print(f' Break even points: {test_option.break_even_points}')
-    # print(f' Risk reward ratio: {RiskProfile.risk_reward_ratio}')
+        self.call_options_exp_july_15_data = {
+            'Exercise Price': [44, 46, 48, 50, 52, 54],
+            'Price': [4.96, 3.52, 2.38, 1.55, 0.97, 0.60],
+            # 'Theoretical value': [10.5, 20.3, 15.7, 8.9, 12.1],
+            'Delta': [0.84, 0.71, 0.55, 0.39, 0.25, 0.15],
+            'Gamma': [0.050, 0.071, 0.082, 0.080, 0.066, 0.048],
+            'Theta': [-0.0052, -0.0074, -0.0085, -0.0083, -0.0069, -0.0050],
+            'Vega': [0.064, 0.091, 0.106, 0.103, 0.085, 0.062],
+            'Implied Volatility': [20.12, 20.21, 20.42, 20.80, 21.14, 21.64]
+        }
+
+        self.put_options_exp_july_15_data = {
+            'Exercise Price': [44, 46, 48, 50, 52, 54],
+            'Price': [0.56, 0.92, 1.98, 3.14, 4.58, 6.21],
+            # 'Theoretical value': [10.5, 20.3, 15.7, 8.9, 12.1],
+            'Delta': [-0.16, -0.29, -0.45, -0.61, -0.75, -0.85],
+            'Gamma': [0.050, 0.071, 0.082, 0.080, 0.066, 0.048],
+            'Theta': [-0.0052, -0.0074, -0.0085, -0.0083, -0.0069, -0.0050],
+            'Vega': [0.064, 0.091, 0.106, 0.103, 0.085, 0.062],
+            'Implied Volatility': [20.12, 20.31, 20.42, 20.71, 21.25, 21.78]
+        }
+        self.test_option_Bought = option(option_type='call', strike_price=105, cost=4, implied_volatility=18,
+                                         curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1),
+                                         curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
+                                         curr_volatility=19, trade='Bought')
+
+        self.test_option_Sold = option(option_type='call', strike_price=105, cost=-4, implied_volatility=18,
+                                       curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1),
+                                       curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
+                                       curr_volatility=19, trade='Sold')
+
+        self.test_option_Bought_put = option(option_type='put', strike_price=105, cost=4, implied_volatility=18,
+                                             curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1),
+                                             curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
+                                             curr_volatility=19, trade='Bought')
+
+        self.test_option_Sold_put = option(option_type='put', strike_price=105, cost=-4, implied_volatility=18,
+                                             curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1),
+                                             curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
+                                             curr_volatility=19, trade='Sold')
+
+    def test_generating_risk_profile_option(self):
+        # print(self.test_option_Bought.price_range)
+        # print(f' Payoff profile: {self.test_option_Bought.payoff_profile}')
+        # print(f' Max profit: {self.test_option_Bought.max_profit}')
+        # print(f' Max loss: {self.test_option_Bought.max_loss}')
+        # print(f' Break even point(s): {self.test_option_Bought.break_even_points}')
+        #
+        # print(self.test_option_Sold.price_range)
+        # print(f' Payoff profile: {self.test_option_Sold.payoff_profile}')
+        # print(f' Max profit: {self.test_option_Sold.max_profit}')
+        # print(f' Max loss: {self.test_option_Sold.max_loss}')
+        # print(f' Break even point(s): {self.test_option_Sold.break_even_points}')
+
+        # print(f' Payoff profile: {self.test_option_Bought_put.price_range}')
+        # print(f' Payoff profile: {self.test_option_Bought_put.payoff_profile}')
+        # print(f' Max profit: {self.test_option_Bought_put.max_profit}')
+        # print(f' Max loss: {self.test_option_Bought_put.max_loss}')
+        # print(f' Break even point(s): {self.test_option_Bought_put.break_even_points}')
+        #
+        # print(f' Payoff profile: {self.test_option_Sold_put.price_range}')
+        # print(f' Payoff profile: {self.test_option_Sold_put.payoff_profile}')
+        # print(f' Max profit: {self.test_option_Sold_put.max_profit}')
+        # print(f' Max loss: {self.test_option_Sold_put.max_loss}')
+        # print(f' Break even point(s): {self.test_option_Sold_put.break_even_points}')
+
+        self.assertEqual(self.test_option_Bought.max_profit, 14.1)
+        self.assertEqual(self.test_option_Bought.max_loss, -4)
+
+        self.assertEqual(self.test_option_Sold.max_profit, 4)
+        self.assertEqual(self.test_option_Sold.max_loss, -14.1)
+
+    def test_generating_risk_profile_spread_straddle(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        straddleSpreads = getStraddleSpreads(may_options)
+
+        # Get Risk metrics for sold straddle
+        straddleTestOne = straddleSpreads[1]
+
+        # print(f' Payoff profile: {straddleTestOne.price_range}')
+        # print(f' Payoff profile: {straddleTestOne.payoff_profile}')
+        # print(f' Max profit: {straddleTestOne.max_profit}')
+        # print(f' Max loss: {straddleTestOne.max_loss}')
+        # print(f' Break even point(s): {straddleTestOne.break_even_points}')
+
+        self.assertEqual(straddleTestOne.max_profit, 4.79)
+        self.assertEqual(straddleTestOne.max_loss, -9.85)
+
+    def test_generating_risk_profile_spread_strangle(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        # Test for different ranges 2, 6, 10
+        strangleSpreads_range2 = getStrangleSpreads(may_options, 2)
+
+        # Get Risk metrics for sold straddle
+        strangleTestOne = strangleSpreads_range2[1]
+        strangleTestOne.print_strangle()
+
+        print(f' Payoff profile: {strangleTestOne.price_range}')
+        print(f' Payoff profile: {strangleTestOne.payoff_profile}')
+        print(f' Max profit: {strangleTestOne.max_profit}')
+        print(f' Max loss: {strangleTestOne.max_loss}')
+        print(f' Break even point(s): {strangleTestOne.break_even_points}')
+        #
+        # self.assertEqual(strangleTestOne.max_profit, 4.79)
+        # self.assertEqual(strangleTestOne.max_loss, -9.85)

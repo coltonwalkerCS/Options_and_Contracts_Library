@@ -4,19 +4,45 @@ from PyOptionClasses.OptionsClass import option, option_data, greeks
 # Spread
 class Spread:
     def __init__(self, options):
-        # self.risk_profile = risk()
-        self.greeks = self.generateSpreadGreeks(options)
+        self.options = options
+        self.greeks = self.generate_spread_greeks()
         self.cost = round(sum(op.curr_cost for op in options), 2)
 
-        return
+        # Risk profile of spread
+        self.underlying_price = options[0].curr_stock_price
+        self.price_range = options[0].get_standard_deviation_price_move_range()
+        self.payoff_profile = self.calc_spread_profit_payout()
+        self.max_profit, self.max_loss, self.break_even_points = self.calc_spread_metrics()
 
-    # Potentially will just place this function in __init__ if not used elsewhere
-    def generateSpreadGreeks(self, options):
+    def calc_spread_profit_payout(self):
+        # print('Test different payoffs')
+        # for option_test in self.options:
+        #     print(f'Option {option_test.option_type}, {option_test.trade} : {option_test.payoff_profile}')
+
+        total_payoff_profile = self.options[0].payoff_profile
+        for i in range(1, len(self.options)):
+            total_payoff_profile = [x + y for x, y in zip(total_payoff_profile, self.options[i].payoff_profile)]
+
+        # print(f'Option combined: {total_payoff_profile}')
+        return total_payoff_profile
+
+    def calc_spread_metrics(self):
+        max_profit = round(max(self.payoff_profile), 2)
+        max_loss = round(min(self.payoff_profile), 2)
+
+        break_even_point = [self.price_range[i] for i, payoff in enumerate(self.payoff_profile) if payoff == 0]
+
+        # risk_reward_ratio = -max_loss / max_profit if max_profit != 0 else None
+        # risk_reward_ratio
+
+        return max_profit, max_loss, break_even_point
+
+    def generate_spread_greeks(self):
         # Delta, Gamma, Theta, Vega, Rho
         # TODO: Fix once rho is added to data
         delta, gamma, theta, vega, rho = 0, 0, 0, 0, 0.01
 
-        for op in options:
+        for op in self.options:
 
             delta += op.greeks.delta
             gamma += op.greeks.gamma
@@ -37,8 +63,8 @@ class Straddle(Spread):
 
     def print_straddle(self):
         print(f'Strike price: {self.strike_price} at date {self.expiration}')
-        print(f'Call option, Cost: {self.call_option.curr_cost}, Greeks {self.call_option.greeks.get_greeks()}')
-        print(f'Put option, Cost: {self.put_option.curr_cost}, Greeks {self.put_option.greeks.get_greeks()}')
+        print(f'Call option {self.call_option.trade}, Cost: {self.call_option.curr_cost}, Greeks {self.call_option.greeks.get_greeks()}')
+        print(f'Put option {self.put_option.trade},, Cost: {self.put_option.curr_cost}, Greeks {self.put_option.greeks.get_greeks()}')
         print(f'Straddle, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
 
 
@@ -54,9 +80,9 @@ class Strangle(Spread):
 
     def print_strangle(self):
         print(f'Mid price: {self.mid_price} and Range: {self.strangle_range} at date {self.expiration}')
-        print(f'Option 1, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
+        print(f'Option 1 {self.option_1.trade}, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
               f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
-        print(f'Option 2, Type: {self.option_2.option_type}, Strike: {self.option_2.strike_price}, '
+        print(f'Option 2 {self.option_2.trade}, Type: {self.option_2.option_type}, Strike: {self.option_2.strike_price}, '
               f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
         print(f'Strangle, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
 
