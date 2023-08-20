@@ -66,6 +66,7 @@ class option:
         return option_with_trade
 
     def get_standard_deviation_price_move_range(self):
+        # TODO: Check if the std dev formula is correct
         standard_deviation = (self.curr_stock_price * (self.current_volatility / 100) *
                               math.sqrt(self.annual_time_to_expiration * 365)) / math.sqrt(365)
 

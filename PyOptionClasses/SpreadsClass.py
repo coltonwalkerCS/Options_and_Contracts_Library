@@ -21,7 +21,8 @@ class Spread:
 
         total_payoff_profile = self.options[0].payoff_profile
         for i in range(1, len(self.options)):
-            total_payoff_profile = [x + y for x, y in zip(total_payoff_profile, self.options[i].payoff_profile)]
+            total_payoff_profile = [round(x + y, 2) for x, y in
+                                    zip(total_payoff_profile, self.options[i].payoff_profile)]
 
         # print(f'Option combined: {total_payoff_profile}')
         return total_payoff_profile
@@ -37,13 +38,20 @@ class Spread:
 
         return max_profit, max_loss, break_even_point
 
+    def print_risk_profile(self):
+        print(f' Payoff profile: {self.price_range}')
+        print(f' Payoff profile: {self.payoff_profile}')
+        print(f' Max profit: {self.max_profit}')
+        print(f' Max loss: {self.max_loss}')
+        print(f' Break even point(s): {self.break_even_points}')
+        return
+
     def generate_spread_greeks(self):
         # Delta, Gamma, Theta, Vega, Rho
         # TODO: Fix once rho is added to data
         delta, gamma, theta, vega, rho = 0, 0, 0, 0, 0.01
 
         for op in self.options:
-
             delta += op.greeks.delta
             gamma += op.greeks.gamma
             theta += op.greeks.theta
@@ -63,8 +71,10 @@ class Straddle(Spread):
 
     def print_straddle(self):
         print(f'Strike price: {self.strike_price} at date {self.expiration}')
-        print(f'Call option {self.call_option.trade}, Cost: {self.call_option.curr_cost}, Greeks {self.call_option.greeks.get_greeks()}')
-        print(f'Put option {self.put_option.trade},, Cost: {self.put_option.curr_cost}, Greeks {self.put_option.greeks.get_greeks()}')
+        print(
+            f'Call option {self.call_option.trade}, Cost: {self.call_option.curr_cost}, Greeks {self.call_option.greeks.get_greeks()}')
+        print(
+            f'Put option {self.put_option.trade},, Cost: {self.put_option.curr_cost}, Greeks {self.put_option.greeks.get_greeks()}')
         print(f'Straddle, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
 
 
@@ -80,10 +90,12 @@ class Strangle(Spread):
 
     def print_strangle(self):
         print(f'Mid price: {self.mid_price} and Range: {self.strangle_range} at date {self.expiration}')
-        print(f'Option 1 {self.option_1.trade}, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
-              f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
-        print(f'Option 2 {self.option_2.trade}, Type: {self.option_2.option_type}, Strike: {self.option_2.strike_price}, '
-              f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
+        print(
+            f'Option 1 {self.option_1.trade}, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
+            f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(
+            f'Option 2 {self.option_2.trade}, Type: {self.option_2.option_type}, Strike: {self.option_2.strike_price}, '
+            f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
         print(f'Strangle, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
 
 
@@ -103,14 +115,18 @@ class Butterfly(Spread):
 
     def print_butterfly(self):
         print(f'Center price: {self.center_price} and Range: {self.butterfly_range} at date {self.expiration}')
-        print(f'Option 1, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
-              f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
-        print(f'Option 2_1, Type: {self.option_2_1.option_type}, Strike: {self.option_2_1.strike_price}, '
-              f'Cost: {self.option_2_1.curr_cost}, Greeks {self.option_2_1.greeks.get_greeks()}')
-        print(f'Option 2_2, Type: {self.option_2_2.option_type}, Strike: {self.option_2_2.strike_price}, '
-              f'Cost: {self.option_2_2.curr_cost}, Greeks {self.option_2_2.greeks.get_greeks()}')
-        print(f'Option 3, Type: {self.option_3.option_type}, Strike: {self.option_3.strike_price}, '
-              f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
+        print(
+            f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: {self.option_1.strike_price}, '
+            f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(
+            f'Option 2_1, Type: {self.option_2_1.option_type} | {self.option_2_1.trade}, Strike: {self.option_2_1.strike_price}, '
+            f'Cost: {self.option_2_1.curr_cost}, Greeks {self.option_2_1.greeks.get_greeks()}')
+        print(
+            f'Option 2_2, Type: {self.option_2_2.option_type} | {self.option_2_2.trade}, Strike: {self.option_2_2.strike_price}, '
+            f'Cost: {self.option_2_2.curr_cost}, Greeks {self.option_2_2.greeks.get_greeks()}')
+        print(
+            f'Option 3, Type: {self.option_3.option_type} | {self.option_3.trade}, Strike: {self.option_3.strike_price}, '
+            f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
         print(f'Butterfly, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
 
 
@@ -130,12 +146,51 @@ class Condor(Spread):
     def print_condor(self):
         print(f'Center price: {self.center_price}, Outer Range: {self.condor_outer_range}, Inner Range: '
               f'{self.condor_inner_range} at date {self.expiration}')
-        print(f'Option 1, Type: {self.option_1.option_type}, Strike: {self.option_1.strike_price}, '
-              f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
-        print(f'Option 2, Type: {self.option_2.option_type}, Strike: {self.option_2.strike_price}, '
-              f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
-        print(f'Option 3, Type: {self.option_3.option_type}, Strike: {self.option_3.strike_price}, '
-              f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
-        print(f'Option 4, Type: {self.option_4.option_type}, Strike: {self.option_4.strike_price}, '
-              f'Cost: {self.option_4.curr_cost}, Greeks {self.option_4.greeks.get_greeks()}')
-        print(f'Butterfly, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
+        print(
+            f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: {self.option_1.strike_price}, '
+            f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(
+            f'Option 2, Type: {self.option_2.option_type} | {self.option_2.trade}, Strike: {self.option_2.strike_price}, '
+            f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
+        print(
+            f'Option 3, Type: {self.option_3.option_type} | {self.option_3.trade}, Strike: {self.option_3.strike_price}, '
+            f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
+        print(
+            f'Option 4, Type: {self.option_4.option_type} | {self.option_4.trade}, Strike: {self.option_4.strike_price}, '
+            f'Cost: {self.option_4.curr_cost}, Greeks {self.option_4.greeks.get_greeks()}')
+        print(f'Condor, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
+
+
+class IronCondor(Spread):
+    def __init__(self, condor_outer_range, condor_inner_range, option_1, option_2, option_3, option_4, expiration):
+        super().__init__([option_1, option_2, option_3, option_4])
+        self.name = 'IronCondor'
+        self.condor_outer_range = condor_outer_range
+        self.condor_inner_range = condor_inner_range
+        self.center_price = abs(option_3.strike_price - option_2.strike_price)
+        self.option_1 = option_1
+        self.option_2 = option_2
+        self.option_3 = option_3
+        self.option_4 = option_4
+        self.expiration = expiration
+
+    def print_iron_condor(self):
+        print(f'Center price: {self.center_price}, Outer Range: {self.condor_outer_range}, Inner Range: '
+              f'{self.condor_inner_range} at date {self.expiration}')
+        print(
+            f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: {self.option_1.strike_price}, '
+            f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(
+            f'Option 2, Type: {self.option_2.option_type} | {self.option_2.trade}, Strike: {self.option_2.strike_price}, '
+            f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
+        print(
+            f'Option 3, Type: {self.option_3.option_type} | {self.option_3.trade}, Strike: {self.option_3.strike_price}, '
+            f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
+        print(
+            f'Option 4, Type: {self.option_4.option_type} | {self.option_4.trade}, Strike: {self.option_4.strike_price}, '
+            f'Cost: {self.option_4.curr_cost}, Greeks {self.option_4.greeks.get_greeks()}')
+        print(f'Iron Condor, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
+
+
+# class RatioSpread(Spread):
+#

@@ -7,7 +7,8 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
     get_scaled_volatility, black_scholes_model_option_price, calc_theta_for_atm_option
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
-from FindingSpreads import getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads
+from FindingSpreads import (getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads,
+                            getIronCondorSpreads)
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -98,7 +99,6 @@ class PricingModelsTest(unittest.TestCase):
         # print(f'Theoretical value of a call contract: {theo_value}\n')
 
         # Test using more realistic probability distributions
-        # print('Call example | more realistic probs: ')
         underlying_prices_list_2 = [80, 90, 100, 110, 120]
         probs_associated_list_2 = [0.1, 0.2, 0.4, 0.2, 0.1]
 
@@ -427,6 +427,55 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(condorSpreads_range4_2[5].option_4.strike_price, 54)
         self.assertEqual(condorSpreads_range4_2[5].cost, 1.01)
 
+    def test_generating_iron_condors(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        iron_CondorSpreads_range2_2 = getIronCondorSpreads(may_options, 2, 2)
+        iron_CondorSpreads_range2_4 = getIronCondorSpreads(may_options, 2, 4)
+        iron_CondorSpreads_range4_2 = getIronCondorSpreads(may_options, 4, 2)
+
+        self.assertEqual(len(iron_CondorSpreads_range2_2), 6)
+        self.assertEqual(len(iron_CondorSpreads_range2_4), 2)
+        self.assertEqual(len(iron_CondorSpreads_range4_2), 4)
+
+        # Test iron_CondorSpreads_range2_2[4]
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_1.option_type, 'put')
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_2.option_type, 'put')
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_3.option_type, 'call')
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_4.option_type, 'call')
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_1.strike_price, 48)
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_2.strike_price, 50)
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_3.strike_price, 52)
+        self.assertEqual(iron_CondorSpreads_range2_2[4].option_4.strike_price, 54)
+        self.assertEqual(iron_CondorSpreads_range2_2[4].cost, 1.42)
+
+        # Test iron_CondorSpreads_range2_4[1]
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_1.option_type, 'put')
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_2.option_type, 'put')
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_3.option_type, 'call')
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_4.option_type, 'call')
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_1.strike_price, 44)
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_2.strike_price, 48)
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_3.strike_price, 50)
+        self.assertEqual(iron_CondorSpreads_range2_4[1].option_4.strike_price, 54)
+        self.assertEqual(iron_CondorSpreads_range2_4[1].cost, -1.85)
+
+        # Test iron_CondorSpreads_range4_2[0]
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_1.option_type, 'put')
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_2.option_type, 'put')
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_3.option_type, 'call')
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_4.option_type, 'call')
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_1.strike_price, 44)
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_2.strike_price, 46)
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_3.strike_price, 50)
+        self.assertEqual(iron_CondorSpreads_range4_2[0].option_4.strike_price, 52)
+        self.assertEqual(iron_CondorSpreads_range4_2[0].cost, 0.84)
+
 
 class RiskProfileTest(unittest.TestCase):
 
@@ -489,34 +538,11 @@ class RiskProfileTest(unittest.TestCase):
                                              curr_volatility=19, trade='Bought')
 
         self.test_option_Sold_put = option(option_type='put', strike_price=105, cost=-4, implied_volatility=18,
-                                             curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1),
-                                             curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
-                                             curr_volatility=19, trade='Sold')
+                                           curr_greeks=greeks(0.1, 0.1, 0.1, 0.1, 0.1),
+                                           curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
+                                           curr_volatility=19, trade='Sold')
 
     def test_generating_risk_profile_option(self):
-        # print(self.test_option_Bought.price_range)
-        # print(f' Payoff profile: {self.test_option_Bought.payoff_profile}')
-        # print(f' Max profit: {self.test_option_Bought.max_profit}')
-        # print(f' Max loss: {self.test_option_Bought.max_loss}')
-        # print(f' Break even point(s): {self.test_option_Bought.break_even_points}')
-        #
-        # print(self.test_option_Sold.price_range)
-        # print(f' Payoff profile: {self.test_option_Sold.payoff_profile}')
-        # print(f' Max profit: {self.test_option_Sold.max_profit}')
-        # print(f' Max loss: {self.test_option_Sold.max_loss}')
-        # print(f' Break even point(s): {self.test_option_Sold.break_even_points}')
-
-        # print(f' Payoff profile: {self.test_option_Bought_put.price_range}')
-        # print(f' Payoff profile: {self.test_option_Bought_put.payoff_profile}')
-        # print(f' Max profit: {self.test_option_Bought_put.max_profit}')
-        # print(f' Max loss: {self.test_option_Bought_put.max_loss}')
-        # print(f' Break even point(s): {self.test_option_Bought_put.break_even_points}')
-        #
-        # print(f' Payoff profile: {self.test_option_Sold_put.price_range}')
-        # print(f' Payoff profile: {self.test_option_Sold_put.payoff_profile}')
-        # print(f' Max profit: {self.test_option_Sold_put.max_profit}')
-        # print(f' Max loss: {self.test_option_Sold_put.max_loss}')
-        # print(f' Break even point(s): {self.test_option_Sold_put.break_even_points}')
 
         self.assertEqual(self.test_option_Bought.max_profit, 14.1)
         self.assertEqual(self.test_option_Bought.max_loss, -4)
@@ -532,16 +558,9 @@ class RiskProfileTest(unittest.TestCase):
         may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
                                   0.1534, 0.0, 18)
 
-        straddleSpreads = getStraddleSpreads(may_options)
-
         # Get Risk metrics for sold straddle
+        straddleSpreads = getStraddleSpreads(may_options)
         straddleTestOne = straddleSpreads[1]
-
-        # print(f' Payoff profile: {straddleTestOne.price_range}')
-        # print(f' Payoff profile: {straddleTestOne.payoff_profile}')
-        # print(f' Max profit: {straddleTestOne.max_profit}')
-        # print(f' Max loss: {straddleTestOne.max_loss}')
-        # print(f' Break even point(s): {straddleTestOne.break_even_points}')
 
         self.assertEqual(straddleTestOne.max_profit, 4.79)
         self.assertEqual(straddleTestOne.max_loss, -9.85)
@@ -554,18 +573,97 @@ class RiskProfileTest(unittest.TestCase):
         may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
                                   0.1534, 0.0, 18)
 
-        # Test for different ranges 2, 6, 10
+        # Get Risk metrics for sold straddle
         strangleSpreads_range2 = getStrangleSpreads(may_options, 2)
+        strangleTestOne = strangleSpreads_range2[1]
+
+        self.assertEqual(strangleTestOne.max_profit, 3.19)
+        self.assertEqual(strangleTestOne.max_loss, -9.45)
 
         # Get Risk metrics for sold straddle
-        strangleTestOne = strangleSpreads_range2[1]
-        strangleTestOne.print_strangle()
+        strangleSpreads_range4 = getStrangleSpreads(may_options, 4)
+        strangleTestTwo = strangleSpreads_range4[3]
 
-        print(f' Payoff profile: {strangleTestOne.price_range}')
-        print(f' Payoff profile: {strangleTestOne.payoff_profile}')
-        print(f' Max profit: {strangleTestOne.max_profit}')
-        print(f' Max loss: {strangleTestOne.max_loss}')
-        print(f' Break even point(s): {strangleTestOne.break_even_points}')
-        #
-        # self.assertEqual(strangleTestOne.max_profit, 4.79)
-        # self.assertEqual(strangleTestOne.max_loss, -9.85)
+        self.assertEqual(strangleTestTwo.max_profit, 1.51)
+        self.assertEqual(strangleTestTwo.max_loss, -7.13)
+
+    def test_generating_risk_profile_spread_butterfly(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        # Test butterfly spread range 2
+        butterflySpreads_range2 = getButterflySpreads(may_options, 2)
+        butterflyTestOne = butterflySpreads_range2[2]
+
+        self.assertEqual(butterflyTestOne.max_profit, 0.36)
+        self.assertEqual(butterflyTestOne.max_loss, -1.64)
+
+        # Test butterfly spread range 4
+        butterflySpreads_range4 = getButterflySpreads(may_options, 4)
+        butterflyTestTwo = butterflySpreads_range4[0]
+
+        self.assertEqual(butterflyTestTwo.max_profit, 2.44)
+        self.assertEqual(butterflyTestTwo.max_loss, -1.56)
+
+    def test_generating_risk_profile_spread_condor(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        # Test condor spread 2_2
+        condorSpreads_range2_2 = getCondorSpreads(may_options, 2, 2)
+        condorTestOne = condorSpreads_range2_2[4]
+
+        self.assertEqual(condorTestOne.max_profit, 1.22)
+        self.assertEqual(condorTestOne.max_loss, -0.78)
+
+        # Test condor spread 2_4
+        condorSpreads_range2_4 = getCondorSpreads(may_options, 2, 4)
+        condorTestTwo = condorSpreads_range2_4[1]
+
+        self.assertEqual(condorTestTwo.max_profit, 1.84)
+        self.assertEqual(condorTestTwo.max_loss, -2.16)
+
+        # Test condor spread 4_2
+        condorSpreads_range4_2 = getCondorSpreads(may_options, 4, 2)
+        condorTestThree = condorSpreads_range4_2[3]
+
+        self.assertEqual(condorTestThree.max_profit, 1.15)
+        self.assertEqual(condorTestThree.max_loss, -0.85)
+
+    def test_generating_risk_profile_spread_iron_condor(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        # Test iron condor spread 2_2
+        iron_CondorSpreads_range2_2 = getIronCondorSpreads(may_options, 2, 2)
+        iron_CondorTestOne = iron_CondorSpreads_range2_2[4]
+
+        self.assertEqual(iron_CondorTestOne.max_profit, 0.58)
+        self.assertEqual(iron_CondorTestOne.max_loss, -1.42)
+
+        # Test iron Condor Spread 2_4
+        iron_CondorSpreads_range2_4 = getIronCondorSpreads(may_options, 2, 4)
+        iron_CondorTestTwo = iron_CondorSpreads_range2_4[1]
+
+        self.assertEqual(iron_CondorTestTwo.max_profit, 1.85)
+        self.assertEqual(iron_CondorTestTwo.max_loss, -2.15)
+
+        # Test iron Condor Spread 4_2
+        iron_CondorSpreads_range4_2 = getIronCondorSpreads(may_options, 4, 2)
+        iron_CondorTestThree = iron_CondorSpreads_range4_2[2]
+
+        self.assertEqual(iron_CondorTestTwo.max_profit, 0.99)
+        self.assertEqual(iron_CondorTestTwo.max_loss, -1.01)
+
