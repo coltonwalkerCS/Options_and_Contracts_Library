@@ -283,14 +283,11 @@ class FindingSpreadsTest(unittest.TestCase):
 
         # Test 3 spreads and the values
 
-
-
         straddleTestOne = straddleSpreads[1]
         self.assertEqual(straddleTestOne.cost, -4.79)
         self.assertEqual(straddleTestOne.greeks.get_greeks(), greeks(-0.84, -0.09, 0.01, -0.06, 0.01).get_greeks())
-        print('Print straddle one')
-        print(straddleTestOne.print_straddle())
-
+        # print('Print straddle one')
+        # print(straddleTestOne.print_straddle())4
 
         straddleTestTwo = straddleSpreads[4]
         self.assertEqual(straddleTestTwo.cost, 3.1)
@@ -315,32 +312,32 @@ class FindingSpreadsTest(unittest.TestCase):
 
         # Test it got the correct number of strangles for the specific range
         # Includes both call and put strangles, and each long and short type
-        self.assertEqual(len(strangleSpreads_range2), 20)
-        self.assertEqual(len(strangleSpreads_range6), 12)
-        self.assertEqual(len(strangleSpreads_range10), 4)
+        self.assertEqual(len(strangleSpreads_range2), 10)
+        self.assertEqual(len(strangleSpreads_range6), 6)
+        self.assertEqual(len(strangleSpreads_range10), 2)
 
         # Test specific instances within each strangle
 
         # Test strangleSpreads_range2[7]
         self.assertEqual(strangleSpreads_range2[7].option_1.option_type, 'put')
-        self.assertEqual(strangleSpreads_range2[7].option_2.option_type, 'put')
-        self.assertEqual(strangleSpreads_range2[7].option_1.strike_price, 46)
-        self.assertEqual(strangleSpreads_range2[7].option_2.strike_price, 48)
-        self.assertEqual(strangleSpreads_range2[7].cost, -1.93)
+        self.assertEqual(strangleSpreads_range2[7].option_2.option_type, 'call')
+        self.assertEqual(strangleSpreads_range2[7].option_1.strike_price, 50)
+        self.assertEqual(strangleSpreads_range2[7].option_2.strike_price, 52)
+        self.assertEqual(strangleSpreads_range2[7].cost, -3)
 
-        # Test strangleSpreads_range6[9]
-        self.assertEqual(strangleSpreads_range6[9].option_1.option_type, 'put')
-        self.assertEqual(strangleSpreads_range6[9].option_2.option_type, 'put')
-        self.assertEqual(strangleSpreads_range6[9].option_1.strike_price, 48)
-        self.assertEqual(strangleSpreads_range6[9].option_2.strike_price, 54)
-        self.assertEqual(strangleSpreads_range6[9].cost, 7.19)
+        # Test strangleSpreads_range6[4]
+        self.assertEqual(strangleSpreads_range6[4].option_1.option_type, 'put')
+        self.assertEqual(strangleSpreads_range6[4].option_2.option_type, 'call')
+        self.assertEqual(strangleSpreads_range6[4].option_1.strike_price, 48)
+        self.assertEqual(strangleSpreads_range6[4].option_2.strike_price, 54)
+        self.assertEqual(strangleSpreads_range6[4].cost, 1.58)
 
         # Test strangleSpreads_range10[1]
-        self.assertEqual(strangleSpreads_range10[0].option_1.option_type, 'call')
+        self.assertEqual(strangleSpreads_range10[0].option_1.option_type, 'put')
         self.assertEqual(strangleSpreads_range10[0].option_2.option_type, 'call')
         self.assertEqual(strangleSpreads_range10[0].option_1.strike_price, 44)
         self.assertEqual(strangleSpreads_range10[0].option_2.strike_price, 54)
-        self.assertEqual(strangleSpreads_range10[0].cost, 4.82)
+        self.assertEqual(strangleSpreads_range10[0].cost, 0.43)
 
     def test_generating_butterflies(self):
         # Put the options data into df
