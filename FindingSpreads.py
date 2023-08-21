@@ -1,5 +1,5 @@
 from PyOptionClasses.OptionsClass import option_data
-from PyOptionClasses.SpreadsClass import Straddle, Strangle, Butterfly, Condor, IronCondor
+from PyOptionClasses.SpreadsClass import Straddle, Strangle, Butterfly, Condor, IronCondor, RatioSpread
 
 
 # Desc: Find Straddle Spreads for a given option data set including calls and puts
@@ -289,3 +289,46 @@ def getIronCondorSpreads(ops_data, inner_range, outer_range):
         iron_condors.append(new_iron_condor_short)
 
     return iron_condors
+
+
+def getRatioSpreads(ops_data, ratio_range):
+    call_ops = ops_data.options_calls
+    put_ops = ops_data.options_puts
+
+    ratios = []
+
+    assert (ratio_range >= ops_data.data_spread)
+    assert (ratio_range % ops_data.data_spread == 0)
+
+    # Get the number of possible ratio spreads
+    # Iterate through and generate ratio spreads
+    # To get num of ratio spreads:
+    # length of options - (total_range / strike dollar gap)
+    strike_dollar_gap = ops_data.data_spread
+    option_data_gap = int(ratio_range / strike_dollar_gap)
+    num_iter = int(len(call_ops) - option_data_gap)
+
+    # 4 types all types are call/call | put/put
+
+    for i in range(0, num_iter):
+
+        # Call ratio spread (sell less lower, buy more higher)
+        # Ex: +3 105 c, -1 95 c
+
+        new_call_op_1_short = call_ops[i].create_option_trade('Sold')
+        new_call_op_2_long = call_ops[i + option_data_gap].create_option_trade('Bought')
+
+        # option_1, option_2, expiration, ratio_range):
+        new_call_ratio_spread_bm = RatioSpread(new_call_op_1_short, new_call_op_2_long, ops_data.expiration_date, ratio_range)
+
+        ratios.append(new_call_ratio_spread_bm)
+
+        # Call ratio spread (buy less lower, sell more higher)
+        # Ex: +1 95 c, -3 105 c
+
+        # Put ratio spread (buy more lower, sell less higher)
+        # Ex: +4 90 p, -1 100 p
+
+        # Put ratio spread (sell more lower, buy less higher)
+        # Ex: +1 100 p, -4 90 p
+    return ratios

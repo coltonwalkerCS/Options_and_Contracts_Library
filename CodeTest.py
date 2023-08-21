@@ -8,7 +8,7 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
 from FindingSpreads import (getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads,
-                            getIronCondorSpreads)
+                            getIronCondorSpreads, getRatioSpreads)
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -475,6 +475,22 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(iron_CondorSpreads_range4_2[0].option_3.strike_price, 50)
         self.assertEqual(iron_CondorSpreads_range4_2[0].option_4.strike_price, 52)
         self.assertEqual(iron_CondorSpreads_range4_2[0].cost, 0.84)
+
+    def test_generating_ratio_spreads(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        RatioSpreads_range2 = getRatioSpreads(may_options, 2)
+
+        test_ratio_one = RatioSpreads_range2[0]
+        print('Test area:')
+        print(f'Op 1: {test_ratio_one.option_1.greeks.delta}')
+        print(f'Op 2: {test_ratio_one.option_2.greeks.delta}')
+        print(f'Ratio: {test_ratio_one.op1_ratio}, {test_ratio_one.op2_ratio}')
 
 
 class RiskProfileTest(unittest.TestCase):

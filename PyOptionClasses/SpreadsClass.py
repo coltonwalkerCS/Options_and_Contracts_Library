@@ -1,4 +1,6 @@
 from PyOptionClasses.OptionsClass import option, option_data, greeks
+import numpy as np
+import math
 
 
 # Spread
@@ -39,7 +41,7 @@ class Spread:
         return max_profit, max_loss, break_even_point
 
     def print_risk_profile(self):
-        print(f' Payoff profile: {self.price_range}')
+        print(f' Price range: {self.price_range}')
         print(f' Payoff profile: {self.payoff_profile}')
         print(f' Max profit: {self.max_profit}')
         print(f' Max loss: {self.max_loss}')
@@ -164,7 +166,7 @@ class Condor(Spread):
 class IronCondor(Spread):
     def __init__(self, condor_outer_range, condor_inner_range, option_1, option_2, option_3, option_4, expiration):
         super().__init__([option_1, option_2, option_3, option_4])
-        self.name = 'IronCondor'
+        self.name = 'Iron Condor'
         self.condor_outer_range = condor_outer_range
         self.condor_inner_range = condor_inner_range
         self.center_price = abs(option_3.strike_price - option_2.strike_price)
@@ -192,5 +194,35 @@ class IronCondor(Spread):
         print(f'Iron Condor, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
 
 
-# class RatioSpread(Spread):
-#
+class RatioSpread(Spread):
+    def __init__(self, option_1, option_2, expiration, ratio_range):
+        super().__init__([option_1, option_2])
+        self.name = 'Ratio'
+        self.option_1 = option_1
+        self.option_2 = option_2
+        self.ratio_range = ratio_range
+        self.expiration = expiration
+        self.op1_ratio, self.op2_ratio = self.get_whole_num_ratio()
+
+    def get_whole_num_ratio(self):
+        # A = np.array([[1.0, 1.0], [abs(self.option_1.greeks.delta), abs(self.option_2.greeks.delta)]])
+        # Y = np.array([1, 1])
+        # ratio = np.linalg.solve(A, Y)
+        # ratio_val = abs(round(max(ratio) / min(ratio), 2))
+        # print('ratio val', ratio_val)
+        numerator = int(abs(self.option_1.greeks.delta * 100))
+        denominator = int(abs(self.option_2.greeks.delta * 100))
+
+        gcd = math.gcd(numerator, denominator)
+
+        ratio_num_one = numerator // gcd
+        ratio_num_two = denominator // gcd
+        ratios = [ratio_num_one, ratio_num_two]
+        ratios.sort()
+
+        # If option 1 has smaller delta give it
+        # the larger ratio number and vis versa
+        if abs(self.option_1.greeks.delta) < abs(self.option_2.greeks.delta):
+            return ratios[1], ratios[0]
+        else:
+            return ratios[0], ratios[1]
