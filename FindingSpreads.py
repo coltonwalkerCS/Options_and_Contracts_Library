@@ -1,5 +1,5 @@
 from PyOptionClasses.OptionsClass import option_data
-from PyOptionClasses.SpreadsClass import Straddle, Strangle, Butterfly, Condor, IronCondor, RatioSpread
+from PyOptionClasses.SpreadsClass import Straddle, Strangle, Butterfly, Condor, IronCondor, RatioSpread, ChristmasTree
 
 
 # Desc: Find Straddle Spreads for a given option data set including calls and puts
@@ -325,10 +325,105 @@ def getRatioSpreads(ops_data, ratio_range):
 
         # Call ratio spread (buy less lower, sell more higher)
         # Ex: +1 95 c, -3 105 c
+        new_call_op_1_long = call_ops[i].create_option_trade('Bought')
+        new_call_op_2_short = call_ops[i + option_data_gap].create_option_trade('Sold')
+
+        # option_1, option_2, expiration, ratio_range):
+        new_call_ratio_spread_bl = RatioSpread(new_call_op_1_long, new_call_op_2_short, ops_data.expiration_date,
+                                               ratio_range)
+
+        ratios.append(new_call_ratio_spread_bl)
 
         # Put ratio spread (buy more lower, sell less higher)
         # Ex: +4 90 p, -1 100 p
 
+        new_put_op_1_short = put_ops[i].create_option_trade('Sold')
+        new_put_op_2_long = put_ops[i + option_data_gap].create_option_trade('Bought')
+
+        # option_1, option_2, expiration, ratio_range):
+        new_put_ratio_spread_bm = RatioSpread(new_put_op_1_short, new_put_op_2_long, ops_data.expiration_date,
+                                               ratio_range)
+
+        ratios.append(new_put_ratio_spread_bm)
+
         # Put ratio spread (sell more lower, buy less higher)
         # Ex: +1 100 p, -4 90 p
+        new_put_op_1_long = put_ops[i].create_option_trade('Bought')
+        new_put_op_2_short = put_ops[i + option_data_gap].create_option_trade('Sold')
+
+        # option_1, option_2, expiration, ratio_range):
+        new_put_ratio_spread_bl = RatioSpread(new_put_op_1_long, new_put_op_2_short, ops_data.expiration_date,
+                                               ratio_range)
+
+        ratios.append(new_put_ratio_spread_bl)
+
     return ratios
+
+
+def getChristmasTreeSpreads(ops_data, christmas_range):
+    call_ops = ops_data.options_calls
+    put_ops = ops_data.options_puts
+
+    # Assert the range is more than the dollar gap and make sure it can have the spread based on the dollar range
+    # i.e. a spread of $3 is not possible when the $ range is $2: 2, 4, 6, 8 cannot have a $3 spread
+    assert (christmas_range >= ops_data.data_spread)
+    assert (christmas_range % ops_data.data_spread == 0)
+    assert (christmas_range * 2 < ops_data.data_spread * len(ops_data.options_calls))
+
+    christmas_trees = []
+    strike_dollar_gap = ops_data.data_spread
+
+    # Get the number of possible butterflies
+    # Iterate through and generate call and then put butterflies
+    # To get num of butterflies:
+    # length of options - 2 * range / strike dollar gap
+    option_data_gap = int((2 * christmas_range) / strike_dollar_gap)
+    num_iter = int(len(call_ops) - option_data_gap)
+    # Test for butterfly
+    option_data_gap = int(option_data_gap / 2)
+
+    for i in range(0, num_iter):
+        # Get long side
+        # Get both calls & puts
+
+        # Christmas long - Calls
+        new_call_op_1_long = call_ops[i].create_option_trade('Bought')
+        new_call_op_2_short = call_ops[i + option_data_gap].create_option_trade('Sold')
+        new_call_op_3_short = call_ops[i + (option_data_gap * 2)].create_option_trade('Sold')
+
+        new_christmas_tree_long_calls = ChristmasTree(new_call_op_1_long, new_call_op_2_short, new_call_op_3_short,
+                                                      ops_data.expiration_date, christmas_range)
+
+        christmas_trees.append(new_christmas_tree_long_calls)
+
+        # Christmas long - Puts
+        new_put_op_1_short = put_ops[i].create_option_trade('Sold')
+        new_put_op_2_short = put_ops[i + option_data_gap].create_option_trade('Sold')
+        new_put_op_3_long = put_ops[i + (option_data_gap * 2)].create_option_trade('Bought')
+
+        new_christmas_tree_long_puts = ChristmasTree(new_put_op_1_short, new_put_op_2_short, new_put_op_3_long,
+                                                     ops_data.expiration_date, christmas_range)
+
+        christmas_trees.append(new_christmas_tree_long_puts)
+
+        # Christmas short - Calls
+        new_call_op_1_short = call_ops[i].create_option_trade('Sold')
+        new_call_op_2_long = call_ops[i + option_data_gap].create_option_trade('Bought')
+        new_call_op_3_long = call_ops[i + (option_data_gap * 2)].create_option_trade('Bought')
+
+        new_christmas_tree_short_calls = ChristmasTree(new_call_op_1_short, new_call_op_2_long, new_call_op_3_long,
+                                                       ops_data.expiration_date, christmas_range)
+
+        christmas_trees.append(new_christmas_tree_short_calls)
+
+        # Christmas short - Puts
+        new_put_op_1_long = put_ops[i].create_option_trade('Bought')
+        new_put_op_2_long = put_ops[i + option_data_gap].create_option_trade('Bought')
+        new_put_op_3_short = put_ops[i + (option_data_gap * 2)].create_option_trade('Sold')
+
+        new_christmas_tree_short_puts = ChristmasTree(new_put_op_1_long, new_put_op_2_long, new_put_op_3_short,
+                                                      ops_data.expiration_date, christmas_range)
+
+        christmas_trees.append(new_christmas_tree_short_puts)
+
+    return christmas_trees

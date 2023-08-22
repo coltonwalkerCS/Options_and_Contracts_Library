@@ -228,3 +228,28 @@ class RatioSpread(Spread):
             return ratios[1], ratios[0]
         else:
             return ratios[0], ratios[1]
+
+
+class ChristmasTree(Spread):
+    def __init__(self, option_1, option_2, option_3, expiration, christmas_range):
+        super().__init__([option_1, option_2, option_3], [1, 1, 1])
+        self.name = 'Christmas Tree'
+        self.option_1 = option_1
+        self.option_2 = option_2
+        self.option_3 = option_3
+        self.center_price = self.option_2.strike_price
+        self.christmas_range = christmas_range
+        self.expiration = expiration
+
+    def print_christmas_tree(self):
+        print(f'Center price: {self.center_price} and Range: {self.christmas_range} at date {self.expiration}')
+        print(
+            f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: {self.option_1.strike_price}, '
+            f'Cost: {self.option_1.curr_cost}, Greeks {self.option_1.greeks.get_greeks()}')
+        print(
+            f'Option 2, Type: {self.option_2.option_type} | {self.option_2.trade}, Strike: {self.option_2.strike_price}, '
+            f'Cost: {self.option_2.curr_cost}, Greeks {self.option_2.greeks.get_greeks()}')
+        print(
+            f'Option 3, Type: {self.option_3.option_type} | {self.option_3.trade}, Strike: {self.option_3.strike_price}, '
+            f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
+        print(f'Christmas Tree, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')

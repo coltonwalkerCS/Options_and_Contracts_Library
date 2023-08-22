@@ -8,7 +8,7 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
 from FindingSpreads import (getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads,
-                            getIronCondorSpreads, getRatioSpreads)
+                            getIronCondorSpreads, getRatioSpreads, getChristmasTreeSpreads)
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -489,9 +489,9 @@ class FindingSpreadsTest(unittest.TestCase):
         RatioSpreads_range6 = getRatioSpreads(may_options, 6)
 
         # Test number of spreads
-        self.assertEqual(len(RatioSpreads_range2), 5)
-        self.assertEqual(len(RatioSpreads_range4), 4)
-        self.assertEqual(len(RatioSpreads_range6), 3)
+        self.assertEqual(len(RatioSpreads_range2), 20)
+        self.assertEqual(len(RatioSpreads_range4), 16)
+        self.assertEqual(len(RatioSpreads_range6), 12)
 
         # Test spread RatioSpreads_range2[0]
         test_ratio_one = RatioSpreads_range2[0]
@@ -510,6 +510,48 @@ class FindingSpreadsTest(unittest.TestCase):
 
         self.assertEqual(abs(test_ratio_three.option_1.greeks.delta * test_ratio_three.op1_ratio),
                          abs(test_ratio_three.option_2.greeks.delta * test_ratio_three.op2_ratio))
+
+    def test_generating_christmas_tree_spreads(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        christmasTreeSpreads_range2 = getChristmasTreeSpreads(may_options, 2)
+        christmasTreeSpreads_range4 = getChristmasTreeSpreads(may_options, 4)
+
+        self.assertEqual(len(christmasTreeSpreads_range2), 16)
+        self.assertEqual(len(christmasTreeSpreads_range4), 8)
+
+        # Test christmasTreeSpreads_range2[3]
+        christmasTreeSpread_TestOne = christmasTreeSpreads_range2[3]
+
+        self.assertEqual(christmasTreeSpread_TestOne.option_1.option_type, 'put')
+        self.assertEqual(christmasTreeSpread_TestOne.option_1.trade, 'Bought')
+        self.assertEqual(christmasTreeSpread_TestOne.option_2.option_type, 'put')
+        self.assertEqual(christmasTreeSpread_TestOne.option_2.trade, 'Bought')
+        self.assertEqual(christmasTreeSpread_TestOne.option_3.option_type, 'put')
+        self.assertEqual(christmasTreeSpread_TestOne.option_3.trade, 'Sold')
+        self.assertEqual(christmasTreeSpread_TestOne.option_1.strike_price, 44)
+        self.assertEqual(christmasTreeSpread_TestOne.option_2.strike_price, 46)
+        self.assertEqual(christmasTreeSpread_TestOne.option_3.strike_price, 48)
+        self.assertEqual(christmasTreeSpread_TestOne.cost, -0.57)
+
+        # Test christmasTreeSpreads_range4[0]
+        christmasTreeSpread_TestTwo = christmasTreeSpreads_range4[0]
+
+        self.assertEqual(christmasTreeSpread_TestTwo.option_1.option_type, 'call')
+        self.assertEqual(christmasTreeSpread_TestTwo.option_1.trade, 'Bought')
+        self.assertEqual(christmasTreeSpread_TestTwo.option_2.option_type, 'call')
+        self.assertEqual(christmasTreeSpread_TestTwo.option_2.trade, 'Sold')
+        self.assertEqual(christmasTreeSpread_TestTwo.option_3.option_type, 'call')
+        self.assertEqual(christmasTreeSpread_TestTwo.option_3.trade, 'Sold')
+        self.assertEqual(christmasTreeSpread_TestTwo.option_1.strike_price, 44)
+        self.assertEqual(christmasTreeSpread_TestTwo.option_2.strike_price, 48)
+        self.assertEqual(christmasTreeSpread_TestTwo.option_3.strike_price, 52)
+        self.assertEqual(christmasTreeSpread_TestTwo.cost, 2.37)
 
 
 class RiskProfileTest(unittest.TestCase):
@@ -702,7 +744,7 @@ class RiskProfileTest(unittest.TestCase):
         self.assertEqual(iron_CondorTestThree.max_profit, 0.99)
         self.assertEqual(iron_CondorTestThree.max_loss, -1.01)
 
-    def test_generating_risk_profile_spread_ratio_spread(self):
+    def test_generating_risk_profile_spread_ratio(self):
         # Put the options data into df
         call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
         put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
@@ -721,10 +763,34 @@ class RiskProfileTest(unittest.TestCase):
 
         # Test spread RatioSpreads_range4[3]
         ratioSpreadTestTwo = RatioSpreads_range4[3]
-        self.assertEqual(ratioSpreadTestTwo.max_profit, 7.7)
-        self.assertEqual(ratioSpreadTestTwo.max_loss, -36.3)
+        self.assertEqual(ratioSpreadTestTwo.max_profit, 2.3)
+        self.assertEqual(ratioSpreadTestTwo.max_loss, -5.7)
 
-        # Test spread RatioSpreads_range6[1]
-        ratioSpreadTestThree = RatioSpreads_range6[1]
-        self.assertEqual(ratioSpreadTestThree.max_profit, 98.28)
-        self.assertEqual(ratioSpreadTestThree.max_loss, -135.72)
+        # Test spread RatioSpreads_range6[6]
+        ratioSpreadTestThree = RatioSpreads_range6[6]
+        ratioSpreadTestThree.print_risk_profile()
+        self.assertEqual(ratioSpreadTestThree.max_profit, 27.72)
+        self.assertEqual(ratioSpreadTestThree.max_loss, -38.28)
+
+    def test_generating_risk_profile_spread_christmas_tree(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        ChristmasTreeSpreads_range2 = getRatioSpreads(may_options, 2)
+        ChristmasTreeSpreads_range4 = getRatioSpreads(may_options, 4)
+
+        # Test spread ChristmasTreeSpreads_range2[2]
+        christmasTreeSpreadTestOne = ChristmasTreeSpreads_range2[2]
+        self.assertEqual(christmasTreeSpreadTestOne.max_profit, 6.48)
+        self.assertEqual(christmasTreeSpreadTestOne.max_loss, -1.52)
+
+        # Test spread ChristmasTreeSpreads_range4[3]
+        christmasTreeSpreadTestTwo = ChristmasTreeSpreads_range4[3]
+        self.assertEqual(christmasTreeSpreadTestTwo.max_profit, 2.3)
+        self.assertEqual(christmasTreeSpreadTestTwo.max_loss, -5.7)
+
+
