@@ -485,12 +485,31 @@ class FindingSpreadsTest(unittest.TestCase):
                                   0.1534, 0.0, 18)
 
         RatioSpreads_range2 = getRatioSpreads(may_options, 2)
+        RatioSpreads_range4 = getRatioSpreads(may_options, 4)
+        RatioSpreads_range6 = getRatioSpreads(may_options, 6)
 
+        # Test number of spreads
+        self.assertEqual(len(RatioSpreads_range2), 5)
+        self.assertEqual(len(RatioSpreads_range4), 4)
+        self.assertEqual(len(RatioSpreads_range6), 3)
+
+        # Test spread RatioSpreads_range2[0]
         test_ratio_one = RatioSpreads_range2[0]
-        print('Test area:')
-        print(f'Op 1: {test_ratio_one.option_1.greeks.delta}')
-        print(f'Op 2: {test_ratio_one.option_2.greeks.delta}')
-        print(f'Ratio: {test_ratio_one.op1_ratio}, {test_ratio_one.op2_ratio}')
+
+        self.assertEqual(abs(test_ratio_one.option_1.greeks.delta * test_ratio_one.op1_ratio),
+                         abs(test_ratio_one.option_2.greeks.delta * test_ratio_one.op2_ratio))
+
+        # Test spread RatioSpreads_range4[1]
+        test_ratio_two = RatioSpreads_range4[1]
+
+        self.assertEqual(abs(test_ratio_two.option_1.greeks.delta * test_ratio_two.op1_ratio),
+                         abs(test_ratio_two.option_2.greeks.delta * test_ratio_two.op2_ratio))
+
+        # Test spread RatioSpreads_range6[1]
+        test_ratio_three = RatioSpreads_range6[1]
+
+        self.assertEqual(abs(test_ratio_three.option_1.greeks.delta * test_ratio_three.op1_ratio),
+                         abs(test_ratio_three.option_2.greeks.delta * test_ratio_three.op2_ratio))
 
 
 class RiskProfileTest(unittest.TestCase):
@@ -680,6 +699,32 @@ class RiskProfileTest(unittest.TestCase):
         iron_CondorSpreads_range4_2 = getIronCondorSpreads(may_options, 4, 2)
         iron_CondorTestThree = iron_CondorSpreads_range4_2[2]
 
-        self.assertEqual(iron_CondorTestTwo.max_profit, 0.99)
-        self.assertEqual(iron_CondorTestTwo.max_loss, -1.01)
+        self.assertEqual(iron_CondorTestThree.max_profit, 0.99)
+        self.assertEqual(iron_CondorTestThree.max_loss, -1.01)
 
+    def test_generating_risk_profile_spread_ratio_spread(self):
+        # Put the options data into df
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        RatioSpreads_range2 = getRatioSpreads(may_options, 2)
+        RatioSpreads_range4 = getRatioSpreads(may_options, 4)
+        RatioSpreads_range6 = getRatioSpreads(may_options, 6)
+
+        # Test spread RatioSpreads_range2[0]
+        ratioSpreadTestOne = RatioSpreads_range2[0]
+        self.assertEqual(ratioSpreadTestOne.max_profit, 73.6)
+        self.assertEqual(ratioSpreadTestOne.max_loss, -18.4)
+
+        # Test spread RatioSpreads_range4[3]
+        ratioSpreadTestTwo = RatioSpreads_range4[3]
+        self.assertEqual(ratioSpreadTestTwo.max_profit, 7.7)
+        self.assertEqual(ratioSpreadTestTwo.max_loss, -36.3)
+
+        # Test spread RatioSpreads_range6[1]
+        ratioSpreadTestThree = RatioSpreads_range6[1]
+        self.assertEqual(ratioSpreadTestThree.max_profit, 98.28)
+        self.assertEqual(ratioSpreadTestThree.max_loss, -135.72)

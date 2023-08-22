@@ -5,8 +5,12 @@ import math
 
 # Spread
 class Spread:
-    def __init__(self, options):
+    def __init__(self, options, ratio):
         self.options = options
+
+        # Included for ratio spreads
+        self.ratio = ratio
+
         self.greeks = self.generate_spread_greeks()
         self.cost = round(sum(op.curr_cost for op in options), 2)
 
@@ -17,16 +21,19 @@ class Spread:
         self.max_profit, self.max_loss, self.break_even_points = self.calc_spread_metrics()
 
     def calc_spread_profit_payout(self):
-        # print('Test different payoffs')
-        # for option_test in self.options:
-        #     print(f'Option {option_test.option_type}, {option_test.trade} : {option_test.payoff_profile}')
 
         total_payoff_profile = self.options[0].payoff_profile
         for i in range(1, len(self.options)):
             total_payoff_profile = [round(x + y, 2) for x, y in
                                     zip(total_payoff_profile, self.options[i].payoff_profile)]
+            # Used primarily for ratio spreads and if there is a specific ratio for a spread
+            pre_value = total_payoff_profile[0]
+            multiplier = self.ratio[i]
+            total_payoff_profile = [element * multiplier for element in total_payoff_profile]
 
-        # print(f'Option combined: {total_payoff_profile}')
+            # To make sure it worked
+            assert(pre_value * multiplier == total_payoff_profile[0])
+
         return total_payoff_profile
 
     def calc_spread_metrics(self):
@@ -64,7 +71,7 @@ class Spread:
 
 class Straddle(Spread):
     def __init__(self, strike_price, call_option, put_option, expiration):
-        super().__init__([call_option, put_option])
+        super().__init__([call_option, put_option], [1, 1])
         self.name = 'Straddle'
         self.strike_price = strike_price
         self.call_option = call_option
@@ -82,7 +89,7 @@ class Straddle(Spread):
 
 class Strangle(Spread):
     def __init__(self, strangle_range, option_1, option_2, expiration):
-        super().__init__([option_1, option_2])
+        super().__init__([option_1, option_2], [1, 1])
         self.name = 'Strangle'
         self.strangle_range = strangle_range
         self.mid_price = abs(option_1.strike_price - option_2.strike_price)
@@ -104,7 +111,7 @@ class Strangle(Spread):
 class Butterfly(Spread):
 
     def __init__(self, butterfly_range, option_1, option_2_1, option_2_2, option_3, expiration):
-        super().__init__([option_1, option_2_1, option_2_2, option_3])
+        super().__init__([option_1, option_2_1, option_2_2, option_3], [1, 1, 1, 1])
         self.name = 'Butterfly'
         self.butterfly_range = butterfly_range
         self.center_price = option_2_1.strike_price
@@ -134,7 +141,7 @@ class Butterfly(Spread):
 
 class Condor(Spread):
     def __init__(self, condor_outer_range, condor_inner_range, option_1, option_2, option_3, option_4, expiration):
-        super().__init__([option_1, option_2, option_3, option_4])
+        super().__init__([option_1, option_2, option_3, option_4], [1, 1, 1, 1])
         self.name = 'Condor'
         self.condor_outer_range = condor_outer_range
         self.condor_inner_range = condor_inner_range
@@ -165,7 +172,7 @@ class Condor(Spread):
 
 class IronCondor(Spread):
     def __init__(self, condor_outer_range, condor_inner_range, option_1, option_2, option_3, option_4, expiration):
-        super().__init__([option_1, option_2, option_3, option_4])
+        super().__init__([option_1, option_2, option_3, option_4], [1, 1, 1, 1])
         self.name = 'Iron Condor'
         self.condor_outer_range = condor_outer_range
         self.condor_inner_range = condor_inner_range
@@ -196,22 +203,17 @@ class IronCondor(Spread):
 
 class RatioSpread(Spread):
     def __init__(self, option_1, option_2, expiration, ratio_range):
-        super().__init__([option_1, option_2])
+        self.op1_ratio, self.op2_ratio = self.get_whole_num_ratio(option_1, option_2)
+        super().__init__([option_1, option_2], [self.op1_ratio, self.op2_ratio])
         self.name = 'Ratio'
         self.option_1 = option_1
         self.option_2 = option_2
         self.ratio_range = ratio_range
         self.expiration = expiration
-        self.op1_ratio, self.op2_ratio = self.get_whole_num_ratio()
 
-    def get_whole_num_ratio(self):
-        # A = np.array([[1.0, 1.0], [abs(self.option_1.greeks.delta), abs(self.option_2.greeks.delta)]])
-        # Y = np.array([1, 1])
-        # ratio = np.linalg.solve(A, Y)
-        # ratio_val = abs(round(max(ratio) / min(ratio), 2))
-        # print('ratio val', ratio_val)
-        numerator = int(abs(self.option_1.greeks.delta * 100))
-        denominator = int(abs(self.option_2.greeks.delta * 100))
+    def get_whole_num_ratio(self, option_1, option_2):
+        numerator = int(abs(option_1.greeks.delta * 100))
+        denominator = int(abs(option_2.greeks.delta * 100))
 
         gcd = math.gcd(numerator, denominator)
 
@@ -222,7 +224,7 @@ class RatioSpread(Spread):
 
         # If option 1 has smaller delta give it
         # the larger ratio number and vis versa
-        if abs(self.option_1.greeks.delta) < abs(self.option_2.greeks.delta):
+        if abs(option_1.greeks.delta) < abs(option_2.greeks.delta):
             return ratios[1], ratios[0]
         else:
             return ratios[0], ratios[1]
