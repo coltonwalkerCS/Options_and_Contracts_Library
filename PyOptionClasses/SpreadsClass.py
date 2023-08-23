@@ -22,17 +22,52 @@ class Spread:
 
     def calc_spread_profit_payout(self):
 
-        total_payoff_profile = self.options[0].payoff_profile
+        # Need to go through and find if options have difference if so, difference = further options time
+        calendar = False
+        original_exp = self.options[0].annual_time_to_expiration
         for i in range(1, len(self.options)):
-            total_payoff_profile = [round(x + y, 2) for x, y in
-                                    zip(total_payoff_profile, self.options[i].payoff_profile)]
-            # Used primarily for ratio spreads and if there is a specific ratio for a spread
-            pre_value = total_payoff_profile[0]
-            multiplier = self.ratio[i]
-            total_payoff_profile = [element * multiplier for element in total_payoff_profile]
+            if self.options[i].annual_time_to_expiration != original_exp:
+                calendar = True
 
-            # To make sure it worked
-            assert(pre_value * multiplier == total_payoff_profile[0])
+        if calendar:
+            # Need to find how many are different
+            time_to_exp = []
+            for option in self.options:
+                if option.annual_time_to_expiration not in time_to_exp:
+                    time_to_exp.append(option.annual_time_to_expiration)
+
+            min_time_to_exp = min(time_to_exp)
+
+            # Group them together
+            updated_option_list = []
+            for option in self.options:
+                updated_option_list.append(option.update.update_time_to_expiration(option.annual_time_to_expiration-min_time_to_exp))
+
+            # Find the total payoff after updating the time to expiration
+            total_payoff_profile = updated_option_list[0].payoff_profile
+            for i in range(1, len(total_payoff_profile)):
+                total_payoff_profile = [round(x + y, 2) for x, y in
+                                        zip(total_payoff_profile, self.options[i].payoff_profile)]
+                # Used primarily for ratio spreads and if there is a specific ratio for a spread
+                pre_value = total_payoff_profile[0]
+                multiplier = self.ratio[i]
+                total_payoff_profile = [element * multiplier for element in total_payoff_profile]
+
+                # To make sure it worked
+                assert (pre_value * multiplier == total_payoff_profile[0])
+
+        else:
+            total_payoff_profile = self.options[0].payoff_profile
+            for i in range(1, len(self.options)):
+                total_payoff_profile = [round(x + y, 2) for x, y in
+                                        zip(total_payoff_profile, self.options[i].payoff_profile)]
+                # Used primarily for ratio spreads and if there is a specific ratio for a spread
+                pre_value = total_payoff_profile[0]
+                multiplier = self.ratio[i]
+                total_payoff_profile = [element * multiplier for element in total_payoff_profile]
+
+                # To make sure it worked
+                assert(pre_value * multiplier == total_payoff_profile[0])
 
         return total_payoff_profile
 
@@ -253,3 +288,26 @@ class ChristmasTree(Spread):
             f'Option 3, Type: {self.option_3.option_type} | {self.option_3.trade}, Strike: {self.option_3.strike_price}, '
             f'Cost: {self.option_3.curr_cost}, Greeks {self.option_3.greeks.get_greeks()}')
         print(f'Christmas Tree, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')
+
+
+class CalenderSpread(Spread):
+    def __init__(self, option_1, option_2, expiration_1, expiration_2):
+        super().__init__([option_1, option_2], [1, 1])
+        self.name = 'Straddle Calender Spread'
+        self.option_1 = option_1
+        self.expiration_1 = expiration_1
+        self.option_2 = option_2
+        self.expiration_2 = expiration_2
+        self.center_price = abs(self.option_1.strike_price - self.option_2.strike_price)
+
+    def print_calender_spread(self):
+        print(f'Center price: {self.center_price}')
+        print(
+            f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: '
+            f'{self.option_1.strike_price}, Cost: {self.option_1.curr_cost}, Greeks '
+            f'{self.option_1.greeks.get_greeks()}, at expiration {self.expiration_1}')
+        print(
+            f'Option 2, Type: {self.option_2.option_type} | {self.option_2.trade}, Strike: '
+            f'{self.option_2.strike_price}, Cost: {self.option_2.curr_cost}, Greeks '
+            f'{self.option_2.greeks.get_greeks()}, at expiration {self.expiration_2}')
+        print(f'Calender Spread, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')

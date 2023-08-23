@@ -53,6 +53,11 @@ class option:
         self.payoff_profile = self.calculate_payoff_profile(self.price_range)
         self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
 
+    def update_time_to_expiration(self, time_to_exp):
+        self.annual_time_to_expiration = time_to_exp
+        self.payoff_profile = self.calculate_payoff_profile(self.price_range)
+        self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
+
     def create_option_trade(self, trade):
         trade_cost = self.curr_cost
         if trade == 'Sold':
@@ -79,23 +84,45 @@ class option:
         return rounded_price_range_list
 
     def calculate_payoff_profile(self, price_range):
+
+        # Find at expiration for non-calendar spreads
         payoff_profile = [0] * len(price_range)
-        for i, price in enumerate(price_range):
-            if self.option_type == 'call':
-                payoff = max(price - self.strike_price, 0)
-            elif self.option_type == 'put':
-                payoff = max(self.strike_price - price, 0)
-            else:
-                raise ValueError("Invalid option type")
 
-            if self.trade == 'Sold':
-                payoff *= -1
-                payoff -= self.curr_cost
-                # Sold options have inverse payoff
-            else:
-                payoff -= self.curr_cost
+        if self.annual_time_to_expiration == 0:
+            for i, price in enumerate(price_range):
+                if self.option_type == 'call':
+                    payoff = max(price - self.strike_price, 0)
+                elif self.option_type == 'put':
+                    payoff = max(self.strike_price - price, 0)
+                else:
+                    raise ValueError("Invalid option type")
 
-            payoff_profile[i] += round(payoff, 2)
+                if self.trade == 'Sold':
+                    payoff *= -1
+                    payoff -= self.curr_cost
+                    # Sold options have inverse payoff
+                else:
+                    payoff -= self.curr_cost
+
+                payoff_profile[i] += round(payoff, 2)
+        else:
+            # Find theoretical value for it to add
+            # Import theoretical price
+            for i, price in enumerate(price_range):
+                theoretical_value = black_scholes_model_option_price(price, self.strike_price,
+                                                                     self.annual_time_to_expiration,
+                                                                     self.current_interest_rate,
+                                                                     self.current_volatility, self.option_type)
+                payoff = theoretical_value
+
+                if self.trade == 'Sold':
+                    payoff *= -1
+                    payoff -= self.curr_cost
+                    # Sold options have inverse payoff
+                else:
+                    payoff -= self.curr_cost
+
+                payoff_profile[i] += round(payoff, 2)
 
         return payoff_profile
 

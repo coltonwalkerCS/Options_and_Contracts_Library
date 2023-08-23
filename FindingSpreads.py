@@ -1,5 +1,6 @@
 from PyOptionClasses.OptionsClass import option_data
-from PyOptionClasses.SpreadsClass import Straddle, Strangle, Butterfly, Condor, IronCondor, RatioSpread, ChristmasTree
+from PyOptionClasses.SpreadsClass import (Straddle, Strangle, Butterfly, Condor, IronCondor, RatioSpread, ChristmasTree,
+                                          CalenderSpread)
 
 
 # Desc: Find Straddle Spreads for a given option data set including calls and puts
@@ -427,3 +428,65 @@ def getChristmasTreeSpreads(ops_data, christmas_range):
         christmas_trees.append(new_christmas_tree_short_puts)
 
     return christmas_trees
+
+
+def getCalendarStraddle(ops_data_closer_expiration, ops_data_further_expiration):
+
+    # Get options for the closer expiration
+    call_ops_closer = ops_data_closer_expiration.options_calls
+    put_ops_closer = ops_data_closer_expiration.options_puts
+
+    # Get options for the further expiration
+    call_ops_further = ops_data_further_expiration.options_calls
+    put_ops_further = ops_data_further_expiration.options_puts
+
+    closer_expiration = call_ops_closer.expiration
+    further_expiration = call_ops_further.expiration
+    # Assert length and values before generating straddles
+    assert (len(call_ops_closer) == len(call_ops_further))
+    assert (len(put_ops_closer) == len(put_ops_further))
+
+    assert (call_ops_closer[0].strike_price == call_ops_further[0].strike_price)
+    assert (put_ops_closer[0].strike_price == put_ops_further[0].strike_price)
+
+    calendar_straddles = []
+
+    for i in range(0, len(call_ops_closer)):
+        # Long calendar spreads
+        # sell closer call buy further call
+        new_call_op_closer_short = call_ops_closer[i].create_option_trade('Sold')
+        new_call_op_further_long = call_ops_further[i].create_option_trade('Bought')
+
+        new_calendar_straddle_calls_long = CalenderSpread(new_call_op_closer_short, new_call_op_further_long,
+                                                          closer_expiration, further_expiration)
+
+        calendar_straddles.append(new_calendar_straddle_calls_long)
+
+        # sell closer put buy further put
+        new_put_op_closer_short = put_ops_closer[i].create_option_trade('Sold')
+        new_put_op_further_long = put_ops_further[i].create_option_trade('Bought')
+        new_calendar_straddle_puts_long = CalenderSpread(new_put_op_closer_short, new_put_op_further_long,
+                                                         closer_expiration, further_expiration)
+
+        calendar_straddles.append(new_calendar_straddle_puts_long)
+
+        # Short Calendar Straddles
+        # buy closer call sell further call
+
+        new_call_op_closer_long = call_ops_closer[i].create_option_trade('Bought')
+        new_call_op_further_short = call_ops_further[i].create_option_trade('Sold')
+
+        new_calendar_straddle_calls_short = CalenderSpread(new_call_op_closer_long, new_call_op_further_short,
+                                                           closer_expiration, further_expiration)
+
+        calendar_straddles.append(new_calendar_straddle_calls_short)
+
+        # buy closer put sell further put
+        new_put_op_closer_long = put_ops_closer[i].create_option_trade('Sold')
+        new_put_op_further_short = put_ops_further[i].create_option_trade('Bought')
+        new_calendar_straddle_puts_short = CalenderSpread(new_put_op_closer_long, new_put_op_further_short,
+                                                          closer_expiration, further_expiration)
+
+        calendar_straddles.append(new_calendar_straddle_puts_short)
+
+    return calendar_straddles
