@@ -440,8 +440,9 @@ def getCalendarStraddle(ops_data_closer_expiration, ops_data_further_expiration)
     call_ops_further = ops_data_further_expiration.options_calls
     put_ops_further = ops_data_further_expiration.options_puts
 
-    closer_expiration = call_ops_closer.expiration
-    further_expiration = call_ops_further.expiration
+    closer_expiration = ops_data_closer_expiration.expiration_date
+    further_expiration = ops_data_further_expiration.expiration_date
+
     # Assert length and values before generating straddles
     assert (len(call_ops_closer) == len(call_ops_further))
     assert (len(put_ops_closer) == len(put_ops_further))
@@ -450,7 +451,7 @@ def getCalendarStraddle(ops_data_closer_expiration, ops_data_further_expiration)
     assert (put_ops_closer[0].strike_price == put_ops_further[0].strike_price)
 
     calendar_straddles = []
-
+    print("Start")
     for i in range(0, len(call_ops_closer)):
         # Long calendar spreads
         # sell closer call buy further call
@@ -461,7 +462,7 @@ def getCalendarStraddle(ops_data_closer_expiration, ops_data_further_expiration)
                                                           closer_expiration, further_expiration)
 
         calendar_straddles.append(new_calendar_straddle_calls_long)
-
+        print("End first")
         # sell closer put buy further put
         new_put_op_closer_short = put_ops_closer[i].create_option_trade('Sold')
         new_put_op_further_long = put_ops_further[i].create_option_trade('Bought')

@@ -8,7 +8,7 @@ from PricingModels import call_option_expected_value, get_theoretical_value_of_c
 from DynamicHedging import delta_neutrality_stock
 from PyOptionClasses.OptionsClass import greeks, option, option_data
 from FindingSpreads import (getStraddleSpreads, getStrangleSpreads, getButterflySpreads, getCondorSpreads,
-                            getIronCondorSpreads, getRatioSpreads, getChristmasTreeSpreads)
+                            getIronCondorSpreads, getRatioSpreads, getChristmasTreeSpreads, getCalendarStraddle)
 
 
 class CommoditiesFuturesTest(unittest.TestCase):
@@ -552,6 +552,27 @@ class FindingSpreadsTest(unittest.TestCase):
         self.assertEqual(christmasTreeSpread_TestTwo.option_2.strike_price, 48)
         self.assertEqual(christmasTreeSpread_TestTwo.option_3.strike_price, 52)
         self.assertEqual(christmasTreeSpread_TestTwo.cost, 2.37)
+
+    def test_generating_calendar_spread(self):
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        call_july_df = pd.DataFrame(self.call_options_exp_july_15_data)
+        put_july_df = pd.DataFrame(self.put_options_exp_july_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+        print("Imported first set")
+
+        july_options = option_data(call_july_df, put_july_df, 'July 15', 48.40,
+                                   0.32, 0.0, 18)
+        print("Import second set")
+
+        calendarStraddleSpreads = getCalendarStraddle(may_options, july_options)
+        print("Created the calendar straddles")
+
+        testCalendarSpreadOne = calendarStraddleSpreads[0]
+        testCalendarSpreadOne.print_calender_spread()
 
 
 class RiskProfileTest(unittest.TestCase):

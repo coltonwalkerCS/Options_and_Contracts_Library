@@ -40,14 +40,17 @@ class Spread:
 
             # Group them together
             updated_option_list = []
+
             for option in self.options:
-                updated_option_list.append(option.update.update_time_to_expiration(option.annual_time_to_expiration-min_time_to_exp))
+                updatedOption = option
+                updatedOption.update_time_to_expiration(option.annual_time_to_expiration-min_time_to_exp)
+                updated_option_list.append(updatedOption)
 
             # Find the total payoff after updating the time to expiration
             total_payoff_profile = updated_option_list[0].payoff_profile
-            for i in range(1, len(total_payoff_profile)):
+            for i in range(1, len(updated_option_list)):
                 total_payoff_profile = [round(x + y, 2) for x, y in
-                                        zip(total_payoff_profile, self.options[i].payoff_profile)]
+                                        zip(total_payoff_profile, updated_option_list[i].payoff_profile)]
                 # Used primarily for ratio spreads and if there is a specific ratio for a spread
                 pre_value = total_payoff_profile[0]
                 multiplier = self.ratio[i]

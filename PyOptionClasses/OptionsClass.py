@@ -106,6 +106,8 @@ class option:
 
                 payoff_profile[i] += round(payoff, 2)
         else:
+            # TODO: Only find if updated to help with performance issues
+
             # Find theoretical value for it to add
             # Import theoretical price
             for i, price in enumerate(price_range):
