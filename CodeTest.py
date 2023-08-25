@@ -285,17 +285,17 @@ class FindingSpreadsTest(unittest.TestCase):
 
         straddleTestOne = straddleSpreads[1]
         self.assertEqual(straddleTestOne.cost, -4.79)
-        self.assertEqual(straddleTestOne.greeks.get_greeks(), greeks(-0.84, -0.09, 0.01, -0.06, 0.01).get_greeks())
+        self.assertEqual(straddleTestOne.greeks.get_greeks(), greeks(-0.84, -0.09, 0.0092, -0.058, 0.01).get_greeks())
         # print('Print straddle one')
         # print(straddleTestOne.print_straddle())4
 
         straddleTestTwo = straddleSpreads[4]
         self.assertEqual(straddleTestTwo.cost, 3.1)
-        self.assertEqual(straddleTestTwo.greeks.get_greeks(), greeks(0.12, 0.23, -0.02, 0.15, 0.01).get_greeks())
+        self.assertEqual(straddleTestTwo.greeks.get_greeks(), greeks(0.12, 0.232, -0.0242, 0.15, 0.01).get_greeks())
 
         straddleTestThree = straddleSpreads[7]
         self.assertEqual(straddleTestThree.cost, -3.46)
-        self.assertEqual(straddleTestThree.greeks.get_greeks(), greeks(0.34, -0.21, 0.02, -0.14, 0.01).get_greeks())
+        self.assertEqual(straddleTestThree.greeks.get_greeks(), greeks(0.34, -0.214, 0.0222, -0.138, 0.01).get_greeks())
 
     def test_generating_strangles(self):
         # Put the options data into df
@@ -562,17 +562,48 @@ class FindingSpreadsTest(unittest.TestCase):
 
         may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
                                   0.1534, 0.0, 18)
-        print("Imported first set")
 
         july_options = option_data(call_july_df, put_july_df, 'July 15', 48.40,
                                    0.32, 0.0, 18)
-        print("Import second set")
 
         calendarStraddleSpreads = getCalendarStraddle(may_options, july_options)
-        print("Created the calendar straddles")
 
+        # Test Calendar Spread calendarStraddleSpreads[0]
         testCalendarSpreadOne = calendarStraddleSpreads[0]
-        testCalendarSpreadOne.print_calender_spread()
+        self.assertEqual(testCalendarSpreadOne.option_1.option_type, 'call')
+        self.assertEqual(testCalendarSpreadOne.option_1.trade, 'Sold')
+        self.assertEqual(testCalendarSpreadOne.option_1.annual_time_to_expiration, 0)
+        self.assertEqual(testCalendarSpreadOne.option_2.option_type, 'call')
+        self.assertEqual(testCalendarSpreadOne.option_2.trade, 'Bought')
+        self.assertEqual(testCalendarSpreadOne.option_2.annual_time_to_expiration, 0.1666)
+        self.assertEqual(testCalendarSpreadOne.option_1.strike_price, 44)
+        self.assertEqual(testCalendarSpreadOne.option_2.strike_price, 44)
+        self.assertEqual(testCalendarSpreadOne.cost, 0.37)
+
+        # Test Calendar Spread
+        testCalendarSpreadTwo = calendarStraddleSpreads[5]
+        # testCalendarSpreadTwo.print_calender_spread()
+        self.assertEqual(testCalendarSpreadTwo.option_1.option_type, 'put')
+        self.assertEqual(testCalendarSpreadTwo.option_1.trade, 'Sold')
+        self.assertEqual(testCalendarSpreadTwo.option_1.annual_time_to_expiration, 0)
+        self.assertEqual(testCalendarSpreadTwo.option_2.option_type, 'put')
+        self.assertEqual(testCalendarSpreadTwo.option_2.trade, 'Bought')
+        self.assertEqual(testCalendarSpreadTwo.option_2.annual_time_to_expiration, 0.1666)
+        self.assertEqual(testCalendarSpreadTwo.option_1.strike_price, 46)
+        self.assertEqual(testCalendarSpreadTwo.option_2.strike_price, 46)
+        self.assertEqual(testCalendarSpreadTwo.cost, 0.34)
+
+        # Test Calendar Spread
+        testCalendarSpreadTwo = calendarStraddleSpreads[18]
+        self.assertEqual(testCalendarSpreadTwo.option_1.option_type, 'call')
+        self.assertEqual(testCalendarSpreadTwo.option_1.trade, 'Bought')
+        self.assertEqual(testCalendarSpreadTwo.option_1.annual_time_to_expiration, 0)
+        self.assertEqual(testCalendarSpreadTwo.option_2.option_type, 'call')
+        self.assertEqual(testCalendarSpreadTwo.option_2.trade, 'Sold')
+        self.assertEqual(testCalendarSpreadTwo.option_2.annual_time_to_expiration, 0.1666)
+        self.assertEqual(testCalendarSpreadTwo.option_1.strike_price, 52)
+        self.assertEqual(testCalendarSpreadTwo.option_2.strike_price, 52)
+        self.assertEqual(testCalendarSpreadTwo.cost, -0.5)
 
 
 class RiskProfileTest(unittest.TestCase):
@@ -814,4 +845,23 @@ class RiskProfileTest(unittest.TestCase):
         self.assertEqual(christmasTreeSpreadTestTwo.max_profit, 2.3)
         self.assertEqual(christmasTreeSpreadTestTwo.max_loss, -5.7)
 
+    def test_generating_risk_profile_spread_calendar(self):
+        call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
+        put_may_df = pd.DataFrame(self.put_options_exp_may_15_data)
+
+        call_july_df = pd.DataFrame(self.call_options_exp_july_15_data)
+        put_july_df = pd.DataFrame(self.put_options_exp_july_15_data)
+
+        may_options = option_data(call_may_df, put_may_df, 'May 15', 48.40,
+                                  0.1534, 0.0, 18)
+
+        july_options = option_data(call_july_df, put_july_df, 'July 15', 48.40,
+                                   0.32, 0.0, 18)
+
+        calendarStraddleSpreads = getCalendarStraddle(may_options, july_options)
+
+        # Test calendar spread risk profile
+        testCalendarSpreadRiskOne = calendarStraddleSpreads[2]
+        testCalendarSpreadRiskOne.print_calender_spread()
+        testCalendarSpreadRiskOne.print_risk_profile()
 

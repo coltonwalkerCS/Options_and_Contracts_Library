@@ -46,6 +46,13 @@ class Spread:
                 updatedOption.update_time_to_expiration(option.annual_time_to_expiration-min_time_to_exp)
                 updated_option_list.append(updatedOption)
 
+            if updated_option_list[0].strike_price == 44 and updated_option_list[1].strike_price == 44:
+                if updated_option_list[0].option_type == 'call' and updated_option_list[1].option_type == 'call':
+
+                    print('Test payoff profile')
+                    print(f'For {updated_option_list[0].trade} | {updated_option_list[0].annual_time_to_expiration} : {updated_option_list[0].payoff_profile}')
+                    print(f'For {updated_option_list[1].trade} | {updated_option_list[1].annual_time_to_expiration} : {updated_option_list[1].payoff_profile}')
+
             # Find the total payoff after updating the time to expiration
             total_payoff_profile = updated_option_list[0].payoff_profile
             for i in range(1, len(updated_option_list)):
@@ -104,7 +111,7 @@ class Spread:
             theta += op.greeks.theta
             vega += op.greeks.vega
 
-        return greeks(round(delta, 2), round(gamma, 2), round(theta, 2), round(vega, 2), round(rho, 2))
+        return greeks(round(delta, 4), round(gamma, 4), round(theta, 4), round(vega, 4), round(rho, 4))
 
 
 class Straddle(Spread):
@@ -301,10 +308,9 @@ class CalenderSpread(Spread):
         self.expiration_1 = expiration_1
         self.option_2 = option_2
         self.expiration_2 = expiration_2
-        self.center_price = abs(self.option_1.strike_price - self.option_2.strike_price)
 
     def print_calender_spread(self):
-        print(f'Center price: {self.center_price}')
+        print(f'{self.name}')
         print(
             f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: '
             f'{self.option_1.strike_price}, Cost: {self.option_1.curr_cost}, Greeks '
