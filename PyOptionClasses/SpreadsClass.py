@@ -16,6 +16,7 @@ class Spread:
 
         # Risk profile of spread
         self.underlying_price = options[0].curr_stock_price
+        # Should be the shorter to expiration option
         self.price_range = options[0].get_standard_deviation_price_move_range()
         self.payoff_profile = self.calc_spread_profit_payout()
         self.max_profit, self.max_loss, self.break_even_points = self.calc_spread_metrics()
@@ -43,15 +44,8 @@ class Spread:
 
             for option in self.options:
                 updatedOption = option
-                updatedOption.update_time_to_expiration(option.annual_time_to_expiration-min_time_to_exp)
+                updatedOption.update_time_to_expiration(option.annual_time_to_expiration-min_time_to_exp, self.price_range)
                 updated_option_list.append(updatedOption)
-
-            if updated_option_list[0].strike_price == 44 and updated_option_list[1].strike_price == 44:
-                if updated_option_list[0].option_type == 'call' and updated_option_list[1].option_type == 'call':
-
-                    print('Test payoff profile')
-                    print(f'For {updated_option_list[0].trade} | {updated_option_list[0].annual_time_to_expiration} : {updated_option_list[0].payoff_profile}')
-                    print(f'For {updated_option_list[1].trade} | {updated_option_list[1].annual_time_to_expiration} : {updated_option_list[1].payoff_profile}')
 
             # Find the total payoff after updating the time to expiration
             total_payoff_profile = updated_option_list[0].payoff_profile
@@ -93,7 +87,7 @@ class Spread:
         return max_profit, max_loss, break_even_point
 
     def print_risk_profile(self):
-        print(f' Price range: {self.price_range}')
+        print(f' Price range: {self.price_range[0]} : {self.price_range[-1]}')
         print(f' Payoff profile: {self.payoff_profile}')
         print(f' Max profit: {self.max_profit}')
         print(f' Max loss: {self.max_loss}')
@@ -314,9 +308,9 @@ class CalenderSpread(Spread):
         print(
             f'Option 1, Type: {self.option_1.option_type} | {self.option_1.trade}, Strike: '
             f'{self.option_1.strike_price}, Cost: {self.option_1.curr_cost}, Greeks '
-            f'{self.option_1.greeks.get_greeks()}, at expiration {self.expiration_1}')
+            f'{self.option_1.greeks.get_greeks()}, at expiration {self.expiration_1} {self.option_1.annual_time_to_expiration}')
         print(
             f'Option 2, Type: {self.option_2.option_type} | {self.option_2.trade}, Strike: '
             f'{self.option_2.strike_price}, Cost: {self.option_2.curr_cost}, Greeks '
-            f'{self.option_2.greeks.get_greeks()}, at expiration {self.expiration_2}')
+            f'{self.option_2.greeks.get_greeks()}, at expiration {self.expiration_2} {self.option_2.annual_time_to_expiration}')
         print(f'Calender Spread, Cost: {self.cost}, Greeks {self.greeks.get_greeks()} \n')

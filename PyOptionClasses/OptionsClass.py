@@ -53,11 +53,11 @@ class option:
         self.payoff_profile = self.calculate_payoff_profile(self.price_range, isCalendar=False)
         self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
 
-    def update_time_to_expiration(self, time_to_exp):
+    def update_time_to_expiration(self, time_to_exp, price_range):
         self.annual_time_to_expiration = time_to_exp
+        self.price_range = price_range
         self.payoff_profile = self.calculate_payoff_profile(self.price_range, isCalendar=True)
         self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
-        # Update price range and payoff profile
 
     def create_option_trade(self, trade):
         trade_cost = self.curr_cost
@@ -72,9 +72,9 @@ class option:
         return option_with_trade
 
     def get_standard_deviation_price_move_range(self):
-        # TODO: Check if the std dev formula is correct
-        standard_deviation = (self.curr_stock_price * (self.current_volatility / 100) *
-                              math.sqrt(self.annual_time_to_expiration * 365)) / math.sqrt(365)
+        # STD dev based on Vol,time = volatility,annual * sqrt(time)
+        standard_deviation = self.curr_stock_price * ((self.current_volatility/100) *
+                                                      math.sqrt(1 / (256 * self.annual_time_to_expiration)))
 
         price_range_lower_bound = round(self.curr_stock_price - (3 * standard_deviation), 2)
         price_range_upper_bound = round(self.curr_stock_price + (3 * standard_deviation), 2)
@@ -111,24 +111,19 @@ class option:
             # Import theoretical price
             # Difference between cost and now new value
             payoff_profile = [0] * len(price_range)
+
             if self.annual_time_to_expiration != 0:
                 for i, price in enumerate(price_range):
                     theoretical_value = black_scholes_model_option_price(price, self.strike_price,
                                                                          self.annual_time_to_expiration,
                                                                          self.current_interest_rate,
                                                                          self.current_volatility, self.option_type)
-                    payoff = theoretical_value
-                    # If sold buy back
-                    # if bought sell
-                    # TODO: FIGURE OUT HOW TO ADD THEORETICAL NEW VALUE TO OLD VALUE TO SHOW
-                    # DIFFERENCE BETWEEN VALUES FOR CALENDAR OPTIONS
                     if self.trade == 'Sold':
                         # Need to buy back and difference is profit
-                        payoff += self.curr_cost
-                        payoff *= -1
-                        # Sold options have inverse payoff
+                        # Curr cost will be neg bc credit
+                        payoff = -1 * (self.curr_cost + theoretical_value)
                     else:
-                        payoff -= self.curr_cost
+                        payoff = -1 * (self.curr_cost - theoretical_value)
                     payoff_profile[i] += round(payoff, 2)
             else:
                 for i, price in enumerate(price_range):

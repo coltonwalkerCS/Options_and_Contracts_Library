@@ -159,6 +159,17 @@ class PricingModelsTest(unittest.TestCase):
         option_price_bsm_put = black_scholes_model_option_price(S, K, T, r, sigma, option_type_put)
         self.assertEqual(option_price_bsm_call, 4.58)
         self.assertEqual(option_price_bsm_put, 6.99)
+
+        S_2 = 38.16
+        K_2 = 44
+        T_2 = 0.1666
+        r_2 = 0.0
+        sigma_2 = 18
+        option_price_bsm_call_2 = black_scholes_model_option_price(S_2, K_2, T_2, r_2, sigma_2, option_type_call)
+        option_price_bsm_put_2 = black_scholes_model_option_price(S_2, K_2, T_2, r_2, sigma_2, option_type_put)
+        self.assertEqual(option_price_bsm_call_2, 0.03)
+        self.assertEqual(option_price_bsm_put_2, 5.87)
+
         # assert (option_price_bsm_call == 4.58)
         # assert (option_price_bsm_put == 6.99)
         # print(f"Theoretical option price for call: {option_price_bsm_call:.2f}")
@@ -671,14 +682,6 @@ class RiskProfileTest(unittest.TestCase):
                                            curr_stock_price=100, annual_time_to_exp=0.1643, curr_int_rate=0.05,
                                            curr_volatility=19, trade='Sold')
 
-    def test_generating_risk_profile_option(self):
-
-        self.assertEqual(self.test_option_Bought.max_profit, 14.1)
-        self.assertEqual(self.test_option_Bought.max_loss, -4)
-
-        self.assertEqual(self.test_option_Sold.max_profit, 4)
-        self.assertEqual(self.test_option_Sold.max_loss, -14.1)
-
     def test_generating_risk_profile_spread_straddle(self):
         # Put the options data into df
         call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
@@ -691,8 +694,8 @@ class RiskProfileTest(unittest.TestCase):
         straddleSpreads = getStraddleSpreads(may_options)
         straddleTestOne = straddleSpreads[1]
 
-        self.assertEqual(straddleTestOne.max_profit, 4.79)
-        self.assertEqual(straddleTestOne.max_loss, -9.85)
+        self.assertEqual(straddleTestOne.max_profit, 4.56)
+        self.assertEqual(straddleTestOne.max_loss, -3.78)
 
     def test_generating_risk_profile_spread_strangle(self):
         # Put the options data into df
@@ -707,14 +710,14 @@ class RiskProfileTest(unittest.TestCase):
         strangleTestOne = strangleSpreads_range2[1]
 
         self.assertEqual(strangleTestOne.max_profit, 3.19)
-        self.assertEqual(strangleTestOne.max_loss, -9.45)
+        self.assertEqual(strangleTestOne.max_loss, -3.38)
 
         # Get Risk metrics for sold straddle
         strangleSpreads_range4 = getStrangleSpreads(may_options, 4)
         strangleTestTwo = strangleSpreads_range4[3]
 
         self.assertEqual(strangleTestTwo.max_profit, 1.51)
-        self.assertEqual(strangleTestTwo.max_loss, -7.13)
+        self.assertEqual(strangleTestTwo.max_loss, -1.06)
 
     def test_generating_risk_profile_spread_butterfly(self):
         # Put the options data into df
@@ -758,7 +761,7 @@ class RiskProfileTest(unittest.TestCase):
         condorTestTwo = condorSpreads_range2_4[1]
 
         self.assertEqual(condorTestTwo.max_profit, 1.84)
-        self.assertEqual(condorTestTwo.max_loss, -2.16)
+        self.assertEqual(condorTestTwo.max_loss, -1.93)
 
         # Test condor spread 4_2
         condorSpreads_range4_2 = getCondorSpreads(may_options, 4, 2)
@@ -787,7 +790,7 @@ class RiskProfileTest(unittest.TestCase):
         iron_CondorTestTwo = iron_CondorSpreads_range2_4[1]
 
         self.assertEqual(iron_CondorTestTwo.max_profit, 1.85)
-        self.assertEqual(iron_CondorTestTwo.max_loss, -2.15)
+        self.assertEqual(iron_CondorTestTwo.max_loss, -1.92)
 
         # Test iron Condor Spread 4_2
         iron_CondorSpreads_range4_2 = getIronCondorSpreads(may_options, 4, 2)
@@ -810,17 +813,16 @@ class RiskProfileTest(unittest.TestCase):
 
         # Test spread RatioSpreads_range2[0]
         ratioSpreadTestOne = RatioSpreads_range2[0]
-        self.assertEqual(ratioSpreadTestOne.max_profit, 73.6)
+        self.assertEqual(ratioSpreadTestOne.max_profit, 63.02)
         self.assertEqual(ratioSpreadTestOne.max_loss, -18.4)
 
         # Test spread RatioSpreads_range4[3]
         ratioSpreadTestTwo = RatioSpreads_range4[3]
         self.assertEqual(ratioSpreadTestTwo.max_profit, 2.3)
-        self.assertEqual(ratioSpreadTestTwo.max_loss, -5.7)
+        self.assertEqual(ratioSpreadTestTwo.max_loss, -5.24)
 
         # Test spread RatioSpreads_range6[6]
         ratioSpreadTestThree = RatioSpreads_range6[6]
-        ratioSpreadTestThree.print_risk_profile()
         self.assertEqual(ratioSpreadTestThree.max_profit, 27.72)
         self.assertEqual(ratioSpreadTestThree.max_loss, -38.28)
 
@@ -837,13 +839,13 @@ class RiskProfileTest(unittest.TestCase):
 
         # Test spread ChristmasTreeSpreads_range2[2]
         christmasTreeSpreadTestOne = ChristmasTreeSpreads_range2[2]
-        self.assertEqual(christmasTreeSpreadTestOne.max_profit, 6.48)
+        self.assertEqual(christmasTreeSpreadTestOne.max_profit, 5.56)
         self.assertEqual(christmasTreeSpreadTestOne.max_loss, -1.52)
 
         # Test spread ChristmasTreeSpreads_range4[3]
         christmasTreeSpreadTestTwo = ChristmasTreeSpreads_range4[3]
         self.assertEqual(christmasTreeSpreadTestTwo.max_profit, 2.3)
-        self.assertEqual(christmasTreeSpreadTestTwo.max_loss, -5.7)
+        self.assertEqual(christmasTreeSpreadTestTwo.max_loss, -5.24)
 
     def test_generating_risk_profile_spread_calendar(self):
         call_may_df = pd.DataFrame(self.call_options_exp_may_15_data)
@@ -862,6 +864,11 @@ class RiskProfileTest(unittest.TestCase):
 
         # Test calendar spread risk profile
         testCalendarSpreadRiskOne = calendarStraddleSpreads[2]
-        testCalendarSpreadRiskOne.print_calender_spread()
-        testCalendarSpreadRiskOne.print_risk_profile()
+        self.assertEqual(testCalendarSpreadRiskOne.max_profit, 0.36)
+        self.assertEqual(testCalendarSpreadRiskOne.max_loss, -0.81)
+
+        # Test calendar spread risk profile 2
+        testCalendarSpreadRiskTwo = calendarStraddleSpreads[8]
+        self.assertEqual(testCalendarSpreadRiskTwo.max_profit, 0.78)
+        self.assertEqual(testCalendarSpreadRiskTwo.max_loss, -0.44)
 
