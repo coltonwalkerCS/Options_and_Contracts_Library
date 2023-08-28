@@ -2,7 +2,7 @@ from PricingModels import black_scholes_model_option_price
 import math
 import numpy as np
 
-
+# Desc: Option greeks for individual contracts and spreads
 class greeks:
     def __init__(self, delta, gamma, theta, vega, rho):
         self.delta = delta
@@ -28,7 +28,9 @@ class greeks:
         return new_greek
 
 
-# Desc:
+# Desc: Option contract: Includes information such as the type, strike price, current cost (@time of data input)
+#       the implied volatility, the greeks, the current underlying stock price, annual time to expiration,
+#       the current interest rate, and the current_volatility (the users found volatility)
 class option:
 
     def __init__(self, option_type, strike_price, cost, implied_volatility, curr_greeks, curr_stock_price,
@@ -54,12 +56,17 @@ class option:
         self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
 
     def update_time_to_expiration(self, time_to_exp, price_range):
+        """ Used to update the time to expiration and corresponding information
+            Used primarily to update calendar spreads & finding the new theoretical
+            value for an option given the updated time to expiration. """
+
         self.annual_time_to_expiration = time_to_exp
         self.price_range = price_range
         self.payoff_profile = self.calculate_payoff_profile(self.price_range, isCalendar=True)
         self.max_profit, self.max_loss, self.break_even_points = self.calculate_metrics(self.price_range)
 
     def create_option_trade(self, trade):
+        """ Creates an option trade: either buying ('Bought') or selling ('Sold'). """
         trade_cost = self.curr_cost
         if trade == 'Sold':
             # Trade gives a credit
@@ -72,6 +79,8 @@ class option:
         return option_with_trade
 
     def get_standard_deviation_price_move_range(self):
+        """ Given the volatility for a given stock, it finds the standard deviation
+            and thus the price range (within 3 std dev) for the stock. """
         # STD dev based on Vol,time = volatility,annual * sqrt(time)
         standard_deviation = self.curr_stock_price * ((self.current_volatility/100) *
                                                       math.sqrt(1 / (256 * self.annual_time_to_expiration)))
@@ -85,7 +94,7 @@ class option:
         return rounded_price_range_list
 
     def calculate_payoff_profile(self, price_range, isCalendar):
-        # Need to calc payoff for calenders
+        """ Finds the payoff profile @ a specific expiration date for an option. """
 
         # Find at expiration for non-calendar spreads
         if not isCalendar:
@@ -107,25 +116,25 @@ class option:
 
                 payoff_profile[i] += round(payoff, 2)
         else:
-            # Find theoretical value for it to add
-            # Import theoretical price
-            # Difference between cost and now new value
+            # Price range for a calendar spread
             payoff_profile = [0] * len(price_range)
 
             if self.annual_time_to_expiration != 0:
+                # For options with still time to expiration
                 for i, price in enumerate(price_range):
                     theoretical_value = black_scholes_model_option_price(price, self.strike_price,
                                                                          self.annual_time_to_expiration,
                                                                          self.current_interest_rate,
                                                                          self.current_volatility, self.option_type)
                     if self.trade == 'Sold':
-                        # Need to buy back and difference is profit
-                        # Curr cost will be neg bc credit
+                        # Need to buy back and difference is profit or loss
                         payoff = -1 * (self.curr_cost + theoretical_value)
                     else:
+                        # Need to sell back and difference is loss or profit
                         payoff = -1 * (self.curr_cost - theoretical_value)
                     payoff_profile[i] += round(payoff, 2)
             else:
+                # For options with no time to expiration
                 for i, price in enumerate(price_range):
                     if self.option_type == 'call':
                         payoff = max(price - self.strike_price, 0)
@@ -146,6 +155,8 @@ class option:
         return payoff_profile
 
     def calculate_metrics(self, price_range):
+        """ Given the price range and the value for an option at difference prices:
+            It finds the max profit, max loss and break even points for the price range """
         max_profit = round(max(self.payoff_profile), 2)
         max_loss = round(min(self.payoff_profile), 2)
 
@@ -155,7 +166,8 @@ class option:
 
         return max_profit, max_loss, break_even_point  # risk_reward_ratio
 
-
+# Desc: Database type of way of storing options data. Includes the list of calls, puts, # a specific expiration date
+#       including the time to expiration, the interest rate and the user found volatility.
 class option_data:
     def __init__(self, options_data_calls, options_data_puts, expiration_date, curr_stock_price, annual_time_to_exp,
                  curr_int_rate, curr_volatility):
@@ -174,16 +186,11 @@ class option_data:
         if options_data_puts is not None:
             self.options_puts = self.generate_option_list(options_data_puts, 'put')
 
-    def generate_option_list(self, options_data_calls, options_type):
+    def generate_option_list(self, options_data, options_type):
+        """ Given the list of options, add their greeks and return the set of options"""
+        # TODO: Fix in future once data contains Rho : Just adds rho 0.01 for now
         options = []
-        for idx, op in options_data_calls.iterrows():
-            # TODO: Fix in future once data contains Rho
-            # TODO: Hopefully pulled data contains all greek values
-            # if op['Rho'] is not None:
-            #     rho = 0.01
-            # else:
-            #     rho = op['Rho']
-
+        for idx, op in options_data.iterrows():
             # Set Greeks and Option into Class
             option_greeks = greeks(delta=op['Delta'], gamma=op['Gamma'], theta=op['Theta'], vega=op['Vega'], rho=0.01)
 
@@ -198,14 +205,12 @@ class option_data:
 
         return options
 
-    # Desc: Return
-    # Input: N/A
-    # Output: Returns the calls and put options data
     def get_options(self):
+        """ Return the list of call and put options within the options data set"""
         return self.options_calls, self.options_puts
 
     def print_options(self):
-        # TODO: ADJUST TO BE FORMATED WITH CALL AND PUT OPTIONS DATA
+        """ Mainly for testing: Used to view the options added to the options data set"""
         print(f'Call options expiring {self.expiration_date} \n')
         print('| ExPr | Price| TheoP| Delta| Gamma |  Theta  | Vega  | ImpVo |')
         for op in self.options_calls:
